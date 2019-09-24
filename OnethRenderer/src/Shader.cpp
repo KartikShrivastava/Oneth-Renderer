@@ -69,9 +69,9 @@ void Shader::UnBind() const {
 	GLCall(glUseProgram(0));
 }
 
-void Shader::SetUniform4f(const char* uniformName, float v1, float v2, float v3, float v4) {
+void Shader::SetUniform1i(const char * uniformName, int v){
 	GLCall(int location = glGetUniformLocation(m_RendererID, uniformName));
-	GLCall(glUniform4f(location, v1, v2, v3, v4));
+	GLCall(glUniform1i(location, v));
 }
 
 void Shader::SetUniform1f(const char* uniformName, float v) {
@@ -79,9 +79,19 @@ void Shader::SetUniform1f(const char* uniformName, float v) {
 	GLCall(glUniform1f(location, v));
 }
 
-void Shader::SetUniform1i(const char * uniformName, int v){
+void Shader::SetUniform3fv(const char* uniformName, float* v) {
+	int location = glGetUniformLocation(m_RendererID, uniformName);
+	glUniform3fv(location, 1, v);
+}
+
+void Shader::SetUniform4f(const char* uniformName, float v1, float v2, float v3, float v4) {
 	GLCall(int location = glGetUniformLocation(m_RendererID, uniformName));
-	GLCall(glUniform1i(location, v));
+	GLCall(glUniform4f(location, v1, v2, v3, v4));
+}
+
+void Shader::SetUniform4fv(const char* uniformName, float* v) {
+	GLCall(int location = glGetUniformLocation(m_RendererID, uniformName));
+	GLCall(glUniform4fv(location, 1, v));
 }
 
 void Shader::SetUniformMat4fv(const char* uniformName, float* v) {
