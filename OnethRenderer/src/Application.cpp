@@ -143,23 +143,23 @@ int main() {
 	tex1.UnBind();
 	tex2.UnBind();
 
-	glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-	glm::vec4 objectColor = glm::vec4(1.0f, 0.5f, 0.31f, 1.0f);
+	glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
+	glm::vec3 objectColor = glm::vec3(1.0f, 0.5f, 0.31f);
 
 	tex1.Bind();
 	tex2.Bind();
 	texShader.Bind();
 	texShader.SetUniform1i("u_textureWood", 0);
 	texShader.SetUniform1i("u_textureYayi", 1);
-	texShader.SetUniform4fv("u_lightColor", glm::value_ptr(lightColor));
+	texShader.SetUniform3fv("u_lightColor", glm::value_ptr(lightColor));
 	texShader.UnBind();
 	
 	normalShader.Bind();
-	normalShader.SetUniform4fv("u_lightColor", glm::value_ptr(lightColor));
+	normalShader.SetUniform3fv("u_lightColor", glm::value_ptr(lightColor));
 	normalShader.UnBind();
 
 	lampShader.Bind();
-	lampShader.SetUniform4fv("u_lightColor", glm::value_ptr(lightColor));
+	lampShader.SetUniform3fv("u_lightColor", glm::value_ptr(lightColor));
 	lampShader.UnBind();
 
 	glEnable(GL_DEPTH_TEST);
@@ -193,7 +193,7 @@ int main() {
 		model = glm::rotate(model, float(glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
 		mvp = projection * view * model;
 		normalShader.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
-		normalShader.SetUniform4fv("u_objectColor", glm::value_ptr(objectColor));
+		normalShader.SetUniform3fv("u_objectColor", glm::value_ptr(objectColor));
 		normalShader.SetUniformMat4fv("u_model", glm::value_ptr(model));
 		normalShader.SetUniform3fv("u_lightPos", glm::value_ptr(lightPos));
 		normalShader.SetUniform3fv("u_camPos", glm::value_ptr(cameraPos));
