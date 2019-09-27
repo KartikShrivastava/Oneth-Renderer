@@ -24,7 +24,6 @@ in vec3 t_normal;
 uniform Material u_material;
 uniform Light u_light;
 uniform vec3 u_camPos;
-uniform float u_time;
 
 out vec4 o_color;
 
