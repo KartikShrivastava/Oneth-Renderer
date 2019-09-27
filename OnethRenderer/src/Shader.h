@@ -11,11 +11,11 @@ public:
 	bool CheckShaderErrors(const unsigned int& id, PFNGLGETSHADERIVPROC GetShaderiv, PFNGLGETSHADERINFOLOGPROC GetShaderInfoLog, GLenum query);
 	void SetUniform1i(const char* uniformName, int v);
 	void SetUniform1f(const char* uniformName, float v);
+	void SetUniform3f(const char* uniformName, float v1, float v2, float v3);
 	void SetUniform3fv(const char* uniformName, float* v);
 	void SetUniform4f(const char* uniformName, float v1, float v2, float v3, float v4);
 	void SetUniform4fv(const char* uniformName, float* v);
 	void SetUniformMat4fv(const char* uniformName, float* v);
-
 
 	void Bind() const;
 	void UnBind() const;

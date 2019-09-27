@@ -10,24 +10,31 @@ struct Material{
 	float shininess;
 };
 
-uniform vec3 u_lightColor;
-uniform vec3 u_lightPos;
-uniform vec3 u_camPos;
-uniform Material material;
+struct Light{
+	vec3 position;
+	
+	vec3 ambient;
+	vec3 diffuse;
+	vec3 specular;
+};
 
-out vec4 col;
+uniform vec3 u_camPos;
+uniform Material u_material;
+uniform Light u_light;
+
+out vec4 o_color;
 
 void main(){
-	vec4 ambient = material.ambient * u_lightColor;
+	vec3 ambient = u_light.ambient * u_material.ambient;
 
 	vec3 normal = normalize(t_normal);
-	vec3 lightDir = normalize(u_lightPos - t_worldPos);
-	vec4 diffuse = material.diffuse * max(dot(normal, lightDir), 0.0) * u_lightColor;
+	vec3 lightDir = normalize(u_light.position - t_worldPos);
+	vec3 diffuse = u_light.diffuse * (max(dot(normal, lightDir), 0.0) * u_material.diffuse);
 
 	vec3 viewDir = normalize(u_camPos - t_worldPos);
 	vec3 reflectDir = reflect(-lightDir, normal);
-	vec4 specular = material.specular * pow(max(dot(viewDir,reflectDir),0.0), shininess) * u_lightColor;
+	vec3 specular = u_light.specular * (pow(max(dot(viewDir,reflectDir), 0.0), u_material.shininess) * u_material.specular);
 
 	vec3 res = ambient + diffuse + specular;
-	col = vec4(res, 1.0);
+	o_color = vec4(res, 1.0);
 }

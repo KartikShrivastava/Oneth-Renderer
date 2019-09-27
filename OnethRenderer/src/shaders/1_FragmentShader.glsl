@@ -1,6 +1,6 @@
 #version 330 core
 
-in vec2 t_tex;
+in vec2 t_texCoords;
 in vec3 t_worldPos;
 in vec3 t_normal;
 
@@ -21,5 +21,5 @@ void main(){
 
 	vec3 res = ambient + diffuse;
 
-	o_col = mix(texture(u_textureWood, t_tex), texture(u_textureYayi, vec2(1.0-t_tex.x,t_tex.y)), u_mixValue) * vec4(res, 1.0);
+	o_col = mix(texture(u_textureWood, t_texCoords), texture(u_textureYayi, vec2(1.0-t_texCoords.x,t_texCoords.y)), u_mixValue) * vec4(res, 1.0);
 }

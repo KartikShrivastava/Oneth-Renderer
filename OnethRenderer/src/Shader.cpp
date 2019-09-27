@@ -60,7 +60,6 @@ bool Shader::CheckShaderErrors(const unsigned int& id, PFNGLGETSHADERIVPROC GetS
 	return true;
 }
 
-
 void Shader::Bind() const {
 	GLCall(glUseProgram(m_RendererID));
 }
@@ -77,6 +76,11 @@ void Shader::SetUniform1i(const char * uniformName, int v){
 void Shader::SetUniform1f(const char* uniformName, float v) {
 	GLCall(int location = glGetUniformLocation(m_RendererID, uniformName));
 	GLCall(glUniform1f(location, v));
+}
+
+void Shader::SetUniform3f(const char* uniformName, float v1, float v2, float v3) {
+	GLCall(int location = glGetUniformLocation(m_RendererID, uniformName));
+	GLCall(glUniform3f(location, v1, v2, v3));
 }
 
 void Shader::SetUniform3fv(const char* uniformName, float* v) {

@@ -135,16 +135,23 @@ int main() {
 	GLCall(glBindVertexArray(0));
 
 	Shader texShader("src/shaders/1_VertexShader.glsl", "src/shaders/1_FragmentShader.glsl");
-	Shader normalShader("src/shaders/2_VertexShader.glsl", "src/shaders/2_FragmentShader.glsl");
+	Shader normalShader("src/shaders/2_VertexShader.glsl", "src/shaders/2_2_FragmentShader.glsl");
 	Shader lampShader("src/shaders/3_LightVS.glsl", "src/shaders/3_LightFS.glsl");
+	Shader lightMapShader("src/shaders/1_VertexShader.glsl", "src/shaders/4_LightMapFS.glsl");
 
-	Texture tex1("res/textures/wood.jpg", GL_RGB, GL_RGB, 0, false);
-	Texture tex2("res/textures/yayi.png", GL_RGBA, GL_RGBA, 1, true);
+	Texture tex1("res/textures/wood.jpg", false, 0);
+	Texture tex2("res/textures/yayi.png", true, 1);
+	Texture tex3("res/textures/diffuseMap.png", false, 2);
+	Texture tex4("res/textures/specularMap.png", false, 3);
+	Texture tex5("res/textures/emissionMap.png", false, 4);
 	tex1.UnBind();
 	tex2.UnBind();
+	tex3.UnBind();
+	tex4.UnBind();
+	tex5.UnBind();
 
 	glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
-	glm::vec3 objectColor = glm::vec3(1.0f, 0.5f, 0.31f);
+	//glm::vec3 objectColor = glm::vec3(1.0f, 0.5f, 0.31f);		//used for 2_FragmentShader
 
 	tex1.Bind();
 	tex2.Bind();
@@ -155,12 +162,31 @@ int main() {
 	texShader.UnBind();
 	
 	normalShader.Bind();
-	normalShader.SetUniform3fv("u_lightColor", glm::value_ptr(lightColor));
+	normalShader.SetUniform3f("u_material.ambient", 1.0f, 0.5f, 0.31f);
+	normalShader.SetUniform3f("u_material.diffuse", 1.0f, 0.5f, 0.31f);
+	normalShader.SetUniform3f("u_material.specular", 1.0f, 0.5f, 0.31f);
+	normalShader.SetUniform1f("u_material.shininess", 32.0f);
+	normalShader.SetUniform3f("u_light.ambient", 0.2f, 0.2f, 0.2);
+	normalShader.SetUniform3f("u_light.diffuse", 0.5f, 0.5f, 0.5f);
+	normalShader.SetUniform3f("u_light.specular", 1.0f, 1.0f, 1.0f);
 	normalShader.UnBind();
 
 	lampShader.Bind();
 	lampShader.SetUniform3fv("u_lightColor", glm::value_ptr(lightColor));
 	lampShader.UnBind();
+
+	tex3.Bind();
+	tex4.Bind();
+	tex5.Bind();
+	lightMapShader.Bind();
+	lightMapShader.SetUniform1i("u_material.diffuseMap", 2);
+	lightMapShader.SetUniform1i("u_material.specularMap", 3);
+	lightMapShader.SetUniform1i("u_material.emissionMap", 4);
+	lightMapShader.SetUniform1f("u_material.shininess", 64);
+	lightMapShader.SetUniform3f("u_light.ambient", 0.2f, 0.2f, 0.2);
+	lightMapShader.SetUniform3f("u_light.diffuse", 0.5f, 0.5f, 0.5f);
+	lightMapShader.SetUniform3f("u_light.specular", 1.0f, 1.0f, 1.0f);
+	lightMapShader.UnBind();
 
 	glEnable(GL_DEPTH_TEST);
 
@@ -176,7 +202,7 @@ int main() {
 
 		texShader.Bind();
 		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(-5.0f, -2.0f, 0.0f));
-		model = glm::rotate(model, float(glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
+		model = glm::rotate(model, float(glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.2f));
 		glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 		glm::mat4 projection = glm::perspective(glm::radians(fov), width / height, 0.1f, 100.0f);
 		glm::mat4 mvp = projection * view * model;
@@ -193,9 +219,9 @@ int main() {
 		model = glm::rotate(model, float(glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
 		mvp = projection * view * model;
 		normalShader.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
-		normalShader.SetUniform3fv("u_objectColor", glm::value_ptr(objectColor));
+		//normalShader.SetUniform3fv("u_objectColor", glm::value_ptr(objectColor));		//used for 2_FragmentShader
 		normalShader.SetUniformMat4fv("u_model", glm::value_ptr(model));
-		normalShader.SetUniform3fv("u_lightPos", glm::value_ptr(lightPos));
+		normalShader.SetUniform3fv("u_light.position", glm::value_ptr(lightPos));
 		normalShader.SetUniform3fv("u_camPos", glm::value_ptr(cameraPos));
 		GLCall(glBindVertexArray(lampVao));
 		GLCall(glDrawArrays(GL_TRIANGLES, 0, 36));
@@ -206,6 +232,18 @@ int main() {
 		mvp = projection * view * model;
 		lampShader.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
 		GLCall(glBindVertexArray(lampVao));
+		GLCall(glDrawArrays(GL_TRIANGLES, 0, 36));
+
+		lightMapShader.Bind();
+		model = glm::translate(glm::mat4(1.0f), glm::vec3(-2.5f, -2.0f, -2.5f));
+		//model = glm::rotate(model, float(glfwGetTime()), glm::vec3(0.7f, 1.0f, 0.0f));
+		mvp = projection * view * model;
+		lightMapShader.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
+		lightMapShader.SetUniformMat4fv("u_model", glm::value_ptr(model));
+		lightMapShader.SetUniform3fv("u_light.position", glm::value_ptr(lightPos));
+		lightMapShader.SetUniform3fv("u_camPos", glm::value_ptr(cameraPos));
+		lightMapShader.SetUniform1f("u_time", glfwGetTime());
+		GLCall(glBindVertexArray(texCubeVao));
 		GLCall(glDrawArrays(GL_TRIANGLES, 0, 36));
 
 		glfwSwapBuffers(window);
