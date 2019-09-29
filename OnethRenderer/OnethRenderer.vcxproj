@@ -45,6 +45,11 @@
     <None Include="src\shaders\2_VertexShader.glsl" />
     <None Include="src\shaders\3_LightFS.glsl" />
     <None Include="src\shaders\3_LightVS.glsl" />
+    <None Include="src\shaders\5_DirectionalLightFS.glsl" />
+    <None Include="src\shaders\6_PointLightFS.glsl" />
+    <None Include="src\shaders\7_SpotLightFS.glsl" />
+    <None Include="src\shaders\7_SpotLightSmoothFS.glsl" />
+    <None Include="src\shaders\8_MixedLightFS.glsl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

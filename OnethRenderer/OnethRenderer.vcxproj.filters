@@ -69,5 +69,10 @@
     <None Include="src\shaders\2_FragmentShader.glsl" />
     <None Include="src\shaders\2_2_FragmentShader.glsl" />
     <None Include="src\shaders\4_LightMapFS.glsl" />
+    <None Include="src\shaders\5_DirectionalLightFS.glsl" />
+    <None Include="src\shaders\6_PointLightFS.glsl" />
+    <None Include="src\shaders\7_SpotLightFS.glsl" />
+    <None Include="src\shaders\7_SpotLightSmoothFS.glsl" />
+    <None Include="src\shaders\8_MixedLightFS.glsl" />
   </ItemGroup>
 </Project>
