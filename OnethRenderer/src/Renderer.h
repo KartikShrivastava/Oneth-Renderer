@@ -4,8 +4,8 @@ class Renderer {
 private:
 
 public:
-	const int width = 800;
-	const int height = 600;
+	const int width = 1080;
+	const int height = 700;
 	float mix = 0.2f;
 	float deltaTime = 0.0f;
 	float lastFrame = 0.0f;

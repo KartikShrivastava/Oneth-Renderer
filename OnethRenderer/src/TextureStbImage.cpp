@@ -1,11 +1,11 @@
 #include <iostream>
 #include <glad/glad.h>
 
-#include "Texture.h"
+#include "TextureStbImage.h"
 #include "CheckGLErrors.h"
 #include "expat/stb_image/stb_image.h"
 
-Texture::Texture(const char * texturePath, bool flipVertically, int textureUnit){
+TextureStbImage::TextureStbImage(const char * texturePath, bool flipVertically, int textureUnit){
 	GLCall(glGenTextures(1, &m_rendererID));
 	if(textureUnit >= 0)
 		GLCall(glActiveTexture(GL_TEXTURE0 + textureUnit));
@@ -37,18 +37,18 @@ Texture::Texture(const char * texturePath, bool flipVertically, int textureUnit)
 	stbi_image_free(image);
 }
 
-void Texture::SetTexParameteri(unsigned int target, unsigned int pname, int param){
+void TextureStbImage::SetTexParameteri(unsigned int target, unsigned int pname, int param){
 	GLCall(glTexParameteri(target, pname, param));
 }
 
-void Texture::SetTexParameterfv(unsigned int target, unsigned int pname, const float * params){
+void TextureStbImage::SetTexParameterfv(unsigned int target, unsigned int pname, const float * params){
 	GLCall(glTexParameterfv(target, pname, params));
 }
 
-void Texture::Bind() const{
+void TextureStbImage::Bind() const{
 	GLCall(glBindTexture(GL_TEXTURE_2D, m_rendererID));
 }
 
-void Texture::UnBind() const{
+void TextureStbImage::UnBind() const{
 	GLCall(glBindTexture(GL_TEXTURE_2D, 0));
 }

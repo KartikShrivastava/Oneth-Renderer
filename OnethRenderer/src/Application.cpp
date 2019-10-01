@@ -5,12 +5,15 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 
 #include "Renderer.h"
 #include "Camera.h"
 #include "CheckGLErrors.h"
 #include "Shader.h"
-#include "Texture.h"
+#include "TextureStbImage.h"
 
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 void ProcessInput(GLFWwindow* window);
@@ -133,11 +136,11 @@ int main() {
 	Shader spotLightShader("src/shaders/1_VertexShader.glsl", "src/shaders/7_SpotLightSmoothFS.glsl");
 	Shader mixedLightShader("src/shaders/1_VertexShader.glsl", "src/shaders/8_MixedLightFS.glsl");
 
-	Texture tex1("res/textures/wood.jpg", false, 0);
-	Texture tex2("res/textures/yayi.png", true, 1);
-	Texture tex3("res/textures/diffuseMap.png", false, 2);
-	Texture tex4("res/textures/specularMap.png", false, 3);
-	Texture tex5("res/textures/emissionMap.png", false, 4);
+	TextureStbImage tex1("res/textures/wood.jpg", false, 0);
+	TextureStbImage tex2("res/textures/yayi.png", true, 1);
+	TextureStbImage tex3("res/textures/diffuseMap.png", false, 2);
+	TextureStbImage tex4("res/textures/specularMap.png", false, 3);
+	TextureStbImage tex5("res/textures/emissionMap.png", false, 4);
 	tex1.UnBind();
 	tex2.UnBind();
 	tex3.UnBind();
@@ -223,20 +226,20 @@ int main() {
 	}
 
 	glm::vec3 pointLightPosition[] = {
-		glm::vec3(2.0f, 0.0f,  2.0f),
-		glm::vec3(5.3f, -1.0f, 0.8f),
-		glm::vec3(5.2f, -1.0f,  2.5f),
-		glm::vec3(3.1f, -1.5f,  1.8f)
+		glm::vec3(2.0f, -1.0f,  1.2f),
+		glm::vec3(5.3f, -1.0f,  1.2f),
+		glm::vec3(4.2f, -1.0f,  1.2f),
+		glm::vec3(3.1f, -1.0f,  1.2f)
 	};
 
 	glm::vec3 pointLightColors[] = {
-		glm::vec3(0.2f, 1.0f, 1.0f),
 		glm::vec3(1.0f, 0.5f, 0.2f),
+		glm::vec3(0.2f, 1.0f, 1.0f),
 		glm::vec3(0.8f, 0.2f, 0.5f),
 		glm::vec3(0.2f, 0.2f, 1.0f)
 	};
 	//mixed light 
-	{//x massive ya?
+	{// massive ya?
 		mixedLightShader.Bind();
 		mixedLightShader.SetUniform1i("u_material.diffuseMap", 2);
 		mixedLightShader.SetUniform1i("u_material.specularMap", 3);
@@ -244,7 +247,7 @@ int main() {
 
 		mixedLightShader.SetUniform3f("u_dLight.direction", -0.5, -0.5, -0.3);
 		mixedLightShader.SetUniform3f("u_dLight.ambient" , 0.0f, 0.0f, 0.0f);
-		mixedLightShader.SetUniform3f("u_dLight.diffuse" , 1.0f, 0.5f, 1.0f);
+		mixedLightShader.SetUniform3f("u_dLight.diffuse" , 0.0f, 0.0f, 0.0f);
 		mixedLightShader.SetUniform3f("u_dLight.specular", 0.0f, 0.0f, 0.0f);
 
 		mixedLightShader.SetUniform3fv("u_pLight[0].position", glm::value_ptr(pointLightPosition[0]));
@@ -279,14 +282,14 @@ int main() {
 		mixedLightShader.SetUniform1f("u_pLight[3].linear", 0.09f);
 		mixedLightShader.SetUniform1f("u_pLight[3].quadratic", 0.032f);
 
-		mixedLightShader.SetUniform3f("u_sLight.ambient", 0.15f, 0.15f, 0.15f);
+		mixedLightShader.SetUniform3f("u_sLight.ambient", 0.0f, 0.0f, 0.0f);
 		mixedLightShader.SetUniform3f("u_sLight.diffuse", 0.5f, 0.5f, 0.5f);
 		mixedLightShader.SetUniform3f("u_sLight.specular", 1.0f, 1.0f, 1.0f);
 		mixedLightShader.SetUniform1f("u_sLight.constant", 1.0f);
 		mixedLightShader.SetUniform1f("u_sLight.linear", 0.027f);
 		mixedLightShader.SetUniform1f("u_sLight.quadratic", 0.0028f);
 		mixedLightShader.SetUniform1f("u_sLight.innerCutoff", glm::cos(glm::radians(5.5f)));		//for smooth spotlight
-		mixedLightShader.SetUniform1f("u_sLight.outerCutoff", glm::cos(glm::radians(10.5f)));		//for smooth spotlight
+		mixedLightShader.SetUniform1f("u_sLight.outerCutoff", glm::cos(glm::radians(7.5f)));		//for smooth spotlight
 		mixedLightShader.UnBind();
 	}
 
@@ -312,7 +315,7 @@ int main() {
 
 		ProcessInput(window);
 		
-		GLCall(glClearColor(0.1f, 0.1f, 0.1f, 1.0f));
+		GLCall(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));
 		GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
 		GLCall(glBindVertexArray(lampVao));
@@ -361,7 +364,7 @@ int main() {
 
 		lightMapShader.Bind();
 		model = glm::translate(glm::mat4(1.0f), glm::vec3(-2.5f, -2.0f, -2.5f));
-		//model = glm::rotate(model, float(glfwGetTime()), glm::vec3(0.7f, 1.0f, 0.0f));
+		model = glm::rotate(model, float(glfwGetTime()), glm::vec3(0.7f, 1.0f, 0.0f));
 		mvp = projection * view * model;
 		lightMapShader.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
 		lightMapShader.SetUniformMat4fv("u_model", glm::value_ptr(model));
