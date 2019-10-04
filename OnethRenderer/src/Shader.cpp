@@ -1,4 +1,3 @@
-#include <glad/glad.h>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -82,7 +81,7 @@ int Shader::GetUniformLocation(const char* name) {
 	return location;
 }
 
-void Shader::SetUniform1i(const char * uniformName, int v){
+void Shader::SetUniform1i(const char * uniformName,unsigned int v){
 	GLCall(glUniform1i(GetUniformLocation(uniformName), v));
 }
 

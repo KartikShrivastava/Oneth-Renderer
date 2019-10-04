@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Application.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\glad.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -37,6 +34,27 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\TextureStbImage.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Mesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Model.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\expat\imgui\imgui.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\expat\imgui\imgui_demo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\expat\imgui\imgui_draw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\expat\imgui\imgui_impl_glfw_gl3.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Application.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -59,6 +77,33 @@
     <ClInclude Include="src\TextureStbImage.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Mesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Model.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\expat\imgui\imconfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\expat\imgui\imgui.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\expat\imgui\imgui_impl_glfw_gl3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\expat\imgui\imgui_internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\expat\imgui\stb_rect_pack.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\expat\imgui\stb_textedit.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\expat\imgui\stb_truetype.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\shaders\3_LightVS.glsl" />
@@ -74,5 +119,10 @@
     <None Include="src\shaders\7_SpotLightFS.glsl" />
     <None Include="src\shaders\7_SpotLightSmoothFS.glsl" />
     <None Include="src\shaders\8_MixedLightFS.glsl" />
+    <None Include="src\shaders\9_ImportedModelShader.glsl" />
+    <None Include="src\shaders\10_TestVS.glsl" />
+    <None Include="src\shaders\10_TestFS.glsl" />
+    <None Include="src\shaders\11_TestFS.glsl" />
+    <None Include="src\shaders\11_TestVS.glsl" />
   </ItemGroup>
 </Project>

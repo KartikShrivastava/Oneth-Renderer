@@ -14,6 +14,9 @@
 #include "CheckGLErrors.h"
 #include "Shader.h"
 #include "TextureStbImage.h"
+#include "Model.h"
+#include "expat/imgui/imgui.h"
+#include "expat/imgui/imgui_impl_glfw_gl3.h"
 
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 void ProcessInput(GLFWwindow* window);
@@ -227,9 +230,9 @@ int main() {
 
 	glm::vec3 pointLightPosition[] = {
 		glm::vec3(2.0f, -1.0f,  1.2f),
-		glm::vec3(5.3f, -1.0f,  1.2f),
-		glm::vec3(4.2f, -1.0f,  1.2f),
-		glm::vec3(3.1f, -1.0f,  1.2f)
+		glm::vec3(5.3f,  0.0f,  1.2f),
+		glm::vec3(4.2f,  1.0f,  -2.0f),
+		glm::vec3(3.1f,  2.5f,  1.2f)
 	};
 
 	glm::vec3 pointLightColors[] = {
@@ -241,13 +244,13 @@ int main() {
 	//mixed light 
 	{// massive ya?
 		mixedLightShader.Bind();
-		mixedLightShader.SetUniform1i("u_material.diffuseMap", 2);
-		mixedLightShader.SetUniform1i("u_material.specularMap", 3);
-		mixedLightShader.SetUniform1f("u_material.shininess", 128.0f);
+		//mixedLightShader.SetUniform1i("u_material.texture_diffuse1", 2);
+		//mixedLightShader.SetUniform1i("u_material.texture_specular1", 3);
+		mixedLightShader.SetUniform1f("u_material.shininess", 64.0f);
 
-		mixedLightShader.SetUniform3f("u_dLight.direction", -0.5, -0.5, -0.3);
-		mixedLightShader.SetUniform3f("u_dLight.ambient" , 0.0f, 0.0f, 0.0f);
-		mixedLightShader.SetUniform3f("u_dLight.diffuse" , 0.0f, 0.0f, 0.0f);
+		mixedLightShader.SetUniform3f("u_dLight.direction", -0.5f, -0.5f, -0.3f);
+		mixedLightShader.SetUniform3f("u_dLight.ambient" , 0.1f, 0.1f, 0.1f);
+		mixedLightShader.SetUniform3f("u_dLight.diffuse" , 0.4f, 0.4f, 0.4f);
 		mixedLightShader.SetUniform3f("u_dLight.specular", 0.0f, 0.0f, 0.0f);
 
 		mixedLightShader.SetUniform3fv("u_pLight[0].position", glm::value_ptr(pointLightPosition[0]));
@@ -255,43 +258,45 @@ int main() {
 		mixedLightShader.SetUniform3fv("u_pLight[0].diffuse", glm::value_ptr(pointLightColors[0]));
 		mixedLightShader.SetUniform3fv("u_pLight[0].specular", glm::value_ptr(pointLightColors[0]));
 		mixedLightShader.SetUniform1f("u_pLight[0].constant", 1.0f);
-		mixedLightShader.SetUniform1f("u_pLight[0].linear", 0.09f);
-		mixedLightShader.SetUniform1f("u_pLight[0].quadratic", 0.032f);
+		mixedLightShader.SetUniform1f("u_pLight[0].linear", 0.045f);
+		mixedLightShader.SetUniform1f("u_pLight[0].quadratic", 0.0075f);
 
 		mixedLightShader.SetUniform3fv("u_pLight[1].position", glm::value_ptr(pointLightPosition[1]));
 		mixedLightShader.SetUniform3f("u_pLight[1].ambient", 0.0f, 0.0f, 0.0f);
 		mixedLightShader.SetUniform3fv("u_pLight[1].diffuse", glm::value_ptr(pointLightColors[1]));
 		mixedLightShader.SetUniform3fv("u_pLight[1].specular", glm::value_ptr(pointLightColors[1]));
 		mixedLightShader.SetUniform1f("u_pLight[1].constant", 1.0f);
-		mixedLightShader.SetUniform1f("u_pLight[1].linear", 0.09f);
-		mixedLightShader.SetUniform1f("u_pLight[1].quadratic", 0.032f);
+		mixedLightShader.SetUniform1f("u_pLight[1].linear", 0.045f);
+		mixedLightShader.SetUniform1f("u_pLight[1].quadratic", 0.0075f);
 
 		mixedLightShader.SetUniform3fv("u_pLight[2].position", glm::value_ptr(pointLightPosition[2]));
 		mixedLightShader.SetUniform3f("u_pLight[2].ambient", 0.0f, 0.0f, 0.0f);
 		mixedLightShader.SetUniform3fv("u_pLight[2].diffuse", glm::value_ptr(pointLightColors[2]));
 		mixedLightShader.SetUniform3fv("u_pLight[2].specular", glm::value_ptr(pointLightColors[2]));
 		mixedLightShader.SetUniform1f("u_pLight[2].constant", 1.0f);
-		mixedLightShader.SetUniform1f("u_pLight[2].linear", 0.09f);
-		mixedLightShader.SetUniform1f("u_pLight[2].quadratic", 0.032f);
+		mixedLightShader.SetUniform1f("u_pLight[2].linear", 0.045f);
+		mixedLightShader.SetUniform1f("u_pLight[2].quadratic", 0.0075f);
 
 		mixedLightShader.SetUniform3fv("u_pLight[3].position", glm::value_ptr(pointLightPosition[3]));
 		mixedLightShader.SetUniform3f("u_pLight[3].ambient", 0.0f, 0.0f, 0.0f);
 		mixedLightShader.SetUniform3fv("u_pLight[3].diffuse", glm::value_ptr(pointLightColors[3]));
 		mixedLightShader.SetUniform3fv("u_pLight[3].specular", glm::value_ptr(pointLightColors[3]));
 		mixedLightShader.SetUniform1f("u_pLight[3].constant", 1.0f);
-		mixedLightShader.SetUniform1f("u_pLight[3].linear", 0.09f);
-		mixedLightShader.SetUniform1f("u_pLight[3].quadratic", 0.032f);
+		mixedLightShader.SetUniform1f("u_pLight[3].linear", 0.045f);
+		mixedLightShader.SetUniform1f("u_pLight[3].quadratic", 0.0075f);
 
 		mixedLightShader.SetUniform3f("u_sLight.ambient", 0.0f, 0.0f, 0.0f);
-		mixedLightShader.SetUniform3f("u_sLight.diffuse", 0.5f, 0.5f, 0.5f);
+		mixedLightShader.SetUniform3f("u_sLight.diffuse", 0.8f, 0.8f, 0.8f);
 		mixedLightShader.SetUniform3f("u_sLight.specular", 1.0f, 1.0f, 1.0f);
 		mixedLightShader.SetUniform1f("u_sLight.constant", 1.0f);
 		mixedLightShader.SetUniform1f("u_sLight.linear", 0.027f);
 		mixedLightShader.SetUniform1f("u_sLight.quadratic", 0.0028f);
 		mixedLightShader.SetUniform1f("u_sLight.innerCutoff", glm::cos(glm::radians(5.5f)));		//for smooth spotlight
-		mixedLightShader.SetUniform1f("u_sLight.outerCutoff", glm::cos(glm::radians(7.5f)));		//for smooth spotlight
+		mixedLightShader.SetUniform1f("u_sLight.outerCutoff", glm::cos(glm::radians(10.5f)));		//for smooth spotlight
 		mixedLightShader.UnBind();
 	}
+
+	Model crytek("res/EUL/EUL4.obj");
 
 	glm::vec3 cubePositions[] = {
 		glm::vec3( 2.0f, -2.0f,  0.0f),
@@ -308,6 +313,10 @@ int main() {
 
 	glEnable(GL_DEPTH_TEST);
 
+	ImGui::CreateContext();
+	ImGui_ImplGlfwGL3_Init(window, true);
+	ImGui::StyleColorsDark();
+
 	while (!glfwWindowShouldClose(window)) {
 		float currFrame = (float)glfwGetTime();
 		renderer.deltaTime = currFrame - renderer.lastFrame;
@@ -318,7 +327,9 @@ int main() {
 		GLCall(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));
 		GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
-		GLCall(glBindVertexArray(lampVao));
+		ImGui_ImplGlfwGL3_NewFrame();
+
+		/*GLCall(glBindVertexArray(lampVao));
 
 		normalShader.Bind();
 		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, -5.0f));
@@ -341,15 +352,6 @@ int main() {
 		lampShader.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
 		GLCall(glDrawArrays(GL_TRIANGLES, 0, 36));
 
-		for (int i = 0; i < 4; ++i) {
-			model = glm::translate(glm::mat4(1.0f), pointLightPosition[i]);
-			model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
-			mvp = projection * view * model;
-			lampShader.SetUniform3fv("u_lightColor", glm::value_ptr(pointLightColors[i]));
-			lampShader.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
-			GLCall(glDrawArrays(GL_TRIANGLES, 0, 36));
-		}
-
 		GLCall(glBindVertexArray(texCubeVao));
 
 		texShader.Bind();
@@ -370,19 +372,41 @@ int main() {
 		lightMapShader.SetUniformMat4fv("u_model", glm::value_ptr(model));
 		lightMapShader.SetUniform3fv("u_light.position", glm::value_ptr(lightPos));
 		lightMapShader.SetUniform3fv("u_camPos", glm::value_ptr(camera.position));
-		GLCall(glDrawArrays(GL_TRIANGLES, 0, 36));
+		GLCall(glDrawArrays(GL_TRIANGLES, 0, 36));*/
 
-		mixedLightShader.Bind();
-		for (int i = 0; i < 10; i++) {
-			model = glm::translate(glm::mat4(1.0f), cubePositions[i]);
-			mvp = projection * view * model;
-			mixedLightShader.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
-			mixedLightShader.SetUniformMat4fv("u_model", glm::value_ptr(model));
-			mixedLightShader.SetUniform3fv("u_sLight.direction", glm::value_ptr(camera.front));
-			mixedLightShader.SetUniform3fv("u_camPos", glm::value_ptr(camera.position));
+		GLCall(glBindVertexArray(lampVao));
+		lampShader.Bind();
+
+		glm::mat4 view = camera.GetViewMatrix();
+		glm::mat4 projection = glm::perspective(glm::radians(camera.fov), (float)renderer.width / renderer.height, 0.1f, 100.0f);
+		glm::mat4 model;
+
+		for (int i = 0; i < 4; ++i) {
+			model = glm::translate(glm::mat4(1.0f), pointLightPosition[i]);
+			model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
+			glm::mat4 mvp = projection * view * model;
+			lampShader.SetUniform3fv("u_lightColor", glm::value_ptr(pointLightColors[i]));
+			lampShader.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
 			GLCall(glDrawArrays(GL_TRIANGLES, 0, 36));
 		}
 
+		mixedLightShader.Bind();
+		model = glm::translate(glm::mat4(1.0f), glm::vec3(4.0f, -2.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+		glm::mat4 mvp = projection * view * model;
+		mixedLightShader.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
+		mixedLightShader.SetUniformMat4fv("u_model", glm::value_ptr(model));
+		mixedLightShader.SetUniform3fv("u_sLight.direction", glm::value_ptr(camera.front));
+		mixedLightShader.SetUniform3fv("u_camPos", glm::value_ptr(camera.position));
+		crytek.Draw(mixedLightShader);
+
+		{
+			ImGui::Text("%.1f FPS", ImGui::GetIO().Framerate);
+		}
+
+		ImGui::Render();
+		ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
+		
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
@@ -397,6 +421,8 @@ int main() {
 
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height) {
 	GLCall(glViewport(0, 0, width, height));
+	renderer.width = width;
+	renderer.height = height;
 }
 
 void ProcessInput(GLFWwindow* window) {
