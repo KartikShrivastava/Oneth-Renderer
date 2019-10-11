@@ -5,21 +5,12 @@
 #include "CheckGLErrors.h"
 #include "expat/stb_image/stb_image.h"
 
-TextureStbImage::TextureStbImage(const char * texturePath, bool flipVertically, int textureUnit){
-	GLCall(glGenTextures(1, &m_rendererID));
-	if(textureUnit >= 0)
-		GLCall(glActiveTexture(GL_TEXTURE0 + textureUnit));
-	GLCall(glBindTexture(GL_TEXTURE_2D, m_rendererID));
-	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT));
-	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT));
-	//float bv[] = { 0.2f, 1.0f, 0.5f, 1.0f };
-	//GLCall(glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, bv));
-	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+TextureStbImage::TextureStbImage(const char * texturePath, bool flipVertically){
 
 	stbi_set_flip_vertically_on_load(flipVertically);
 	int width, height, nChannels;
 	unsigned char* image = stbi_load(texturePath, &width, &height, &nChannels, 0);
+
 	GLenum format;
 	if (nChannels == 1)
 		format = GL_RED;
@@ -27,13 +18,23 @@ TextureStbImage::TextureStbImage(const char * texturePath, bool flipVertically, 
 		format = GL_RGB;
 	else if (nChannels == 4)
 		format = GL_RGBA;
+
 	if (image) {
+		GLCall(glGenTextures(1, &m_rendererID));
+		GLCall(glBindTexture(GL_TEXTURE_2D, m_rendererID));
 		GLCall(glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, image));
+		GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT));
+		GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT));
+		//float bv[] = { 0.2f, 1.0f, 0.5f, 1.0f };
+		//GLCall(glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, bv));
+		GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+		GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
 		GLCall(glGenerateMipmap(GL_TEXTURE_2D));
+		UnBind();
 	}
-	else {
+	else
 		std::cout << "Unable to load texture man!" << std::endl;
-	}
+	
 	stbi_image_free(image);
 }
 
@@ -45,8 +46,9 @@ void TextureStbImage::SetTexParameterfv(unsigned int target, unsigned int pname,
 	GLCall(glTexParameterfv(target, pname, params));
 }
 
-void TextureStbImage::Bind() const{
-	GLCall(glBindTexture(GL_TEXTURE_2D, m_rendererID));
+void TextureStbImage::Bind(unsigned int textureUnit) const {
+	glActiveTexture(GL_TEXTURE0 + textureUnit);
+	glBindTexture(GL_TEXTURE_2D, m_rendererID);
 }
 
 void TextureStbImage::UnBind() const{

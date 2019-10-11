@@ -1,7 +1,5 @@
 #version 330 core
 
-//using 1_VertexShader.glsl
-
 struct Material{
 	sampler2D diffuseMap;
 	sampler2D specularMap;

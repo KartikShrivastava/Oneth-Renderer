@@ -6,8 +6,8 @@ in vec3 t_normal;
 
 uniform sampler2D u_textureWood;
 uniform sampler2D u_textureYayi;
-uniform vec3 u_lightPos;
 uniform vec3 u_lightColor;
+uniform vec3 u_lightPos;
 uniform float u_mixValue;
 
 out vec4 o_col;
@@ -21,5 +21,5 @@ void main(){
 
 	vec3 res = ambient + diffuse;
 
-	o_col = mix(texture(u_textureWood, t_texCoords), texture(u_textureYayi, vec2(1.0-t_texCoords.x,t_texCoords.y)), u_mixValue) * vec4(res, 1.0);
+	o_col = mix(texture(u_textureWood, t_texCoords), texture(u_textureYayi, t_texCoords), u_mixValue) * vec4(res, 1.0);
 }

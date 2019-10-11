@@ -23,16 +23,22 @@ void ProcessInput(GLFWwindow* window);
 void MouseCallback(GLFWwindow* window, double xpos, double ypos);
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
-glm::vec3 lightPos = glm::vec3(-1.0f, 0.0, -1.0f);
+glm::vec3 lightPos = glm::vec3(0.0f, 2.0, 0.0f);
+glm::vec3 lightAmbient = glm::vec3(0.2f, 0.2f, 0.2f);
+glm::vec3 lightDiffuse = glm::vec3(1.0f, 1.0f, 1.0f);
+glm::vec3 lightSpecular = glm::vec3(1.0f, 1.0f, 1.0f);
+glm::vec3 firstCubePos = glm::vec3(-1.0f, 0.0f, 0.0f);
+glm::vec3 cubeSetupPos = glm::vec3(-12.0f, 0.0f, 3.0f);
+glm::vec3 ImportedModelSetupPos = glm::vec3(-6.0f, -1.5f, 3.0f);
 
 Renderer renderer;
-Camera camera;
+Camera camera(glm::vec3(0.0f, 0.0f, 5.0f));
 
 int main() {
 	if(!glfwInit())
 		return -1;
 
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
@@ -110,9 +116,9 @@ int main() {
 	GLCall(glBindBuffer(GL_ARRAY_BUFFER, cubeVbo));
 	GLCall(glBufferData(GL_ARRAY_BUFFER, sizeof(verticesBox), verticesBox, GL_STATIC_DRAW));
 	
-	unsigned int texCubeVao;
-	GLCall(glGenVertexArrays(1, &texCubeVao));
-	GLCall(glBindVertexArray(texCubeVao));
+	unsigned int texturedCubeVao;
+	GLCall(glGenVertexArrays(1, &texturedCubeVao));
+	GLCall(glBindVertexArray(texturedCubeVao));
 	GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0));
 	GLCall(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float))));
 	GLCall(glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float))));
@@ -121,118 +127,111 @@ int main() {
 	GLCall(glEnableVertexAttribArray(2));
 	GLCall(glBindVertexArray(0));
 
-	unsigned int lampVao;
-	GLCall(glGenVertexArrays(1, &lampVao));
-	GLCall(glBindVertexArray(lampVao));
+	unsigned int nonTexturedCubeVao;
+	GLCall(glGenVertexArrays(1, &nonTexturedCubeVao));
+	GLCall(glBindVertexArray(nonTexturedCubeVao));
 	GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0));
 	GLCall(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float))));
 	GLCall(glEnableVertexAttribArray(0));
 	GLCall(glEnableVertexAttribArray(1));
 	GLCall(glBindVertexArray(0));
-
-	Shader texShader("src/shaders/1_VertexShader.glsl", "src/shaders/1_FragmentShader.glsl");
-	Shader normalShader("src/shaders/2_VertexShader.glsl", "src/shaders/2_2_FragmentShader.glsl");
-	Shader lampShader("src/shaders/3_LightVS.glsl", "src/shaders/3_LightFS.glsl");
-	Shader lightMapShader("src/shaders/1_VertexShader.glsl", "src/shaders/4_LightMapFS.glsl");
-	Shader directionalLightShader("src/shaders/1_VertexShader.glsl", "src/shaders/5_DirectionalLightFS.glsl");
-	Shader pointLightShader("src/shaders/1_VertexShader.glsl", "src/shaders/6_PointLightFS.glsl");
-	Shader spotLightShader("src/shaders/1_VertexShader.glsl", "src/shaders/7_SpotLightSmoothFS.glsl");
-	Shader mixedLightShader("src/shaders/1_VertexShader.glsl", "src/shaders/8_MixedLightFS.glsl");
-
-	TextureStbImage tex1("res/textures/wood.jpg", false, 0);
-	TextureStbImage tex2("res/textures/yayi.png", true, 1);
-	TextureStbImage tex3("res/textures/diffuseMap.png", false, 2);
-	TextureStbImage tex4("res/textures/specularMap.png", false, 3);
-	TextureStbImage tex5("res/textures/emissionMap.png", false, 4);
-	tex1.UnBind();
-	tex2.UnBind();
-	tex3.UnBind();
-	tex4.UnBind();
-	tex5.UnBind();
-
-	glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
-	//glm::vec3 objectColor = glm::vec3(1.0f, 0.5f, 0.31f);		//used for 2_FragmentShader
-
-	tex1.Bind();
-	tex2.Bind();
-	texShader.Bind();
-	texShader.SetUniform1i("u_textureWood", 0);
-	texShader.SetUniform1i("u_textureYayi", 1);
-	texShader.SetUniform3fv("u_lightColor", glm::value_ptr(lightColor));
-	texShader.UnBind();
 	
-	normalShader.Bind();
-	normalShader.SetUniform3f("u_material.ambient", 1.0f, 0.5f, 0.31f);
-	normalShader.SetUniform3f("u_material.diffuse", 1.0f, 0.5f, 0.31f);
-	normalShader.SetUniform3f("u_material.specular", 1.0f, 0.5f, 0.31f);
-	normalShader.SetUniform1f("u_material.shininess", 32.0f);
-	normalShader.SetUniform3f("u_light.ambient", 0.06f, 0.06f, 0.06f);
-	normalShader.SetUniform3f("u_light.diffuse", 0.5f, 0.5f, 0.5f);
-	normalShader.SetUniform3f("u_light.specular", 1.0f, 1.0f, 1.0f);
-	normalShader.UnBind();
+	Shader lampShader_1("src/shaders/1_SimpleVertexShader.glsl", "src/shaders/1_SimpleFragmentShader.glsl");
+	Shader noTexShader_2("src/shaders/2_VertexShader.glsl", "src/shaders/2_MaterialFragmentShader.glsl");
+	Shader texShader_3("src/shaders/3_VertexShader.glsl", "src/shaders/3_TexturedFragmentShader.glsl");
+	Shader lightMapShader_4("src/shaders/3_VertexShader.glsl", "src/shaders/4_TexturedMaterialFragmentShader.glsl");
+	Shader directionalLightShader_5("src/shaders/3_VertexShader.glsl", "src/shaders/5_DirectionalLightFS.glsl");
+	Shader pointLightShader_6("src/shaders/3_VertexShader.glsl", "src/shaders/6_PointLightFS.glsl");
+	Shader spotLightShader_7("src/shaders/3_VertexShader.glsl", "src/shaders/7_SpotLightSmoothFS.glsl");
+	Shader mixedLightShader_8("src/shaders/3_VertexShader.glsl", "src/shaders/8_MixedLightFS.glsl");
 
-	tex3.Bind();
-	tex4.Bind();
-	tex5.Bind();
-	lightMapShader.Bind();
-	lightMapShader.SetUniform1i("u_material.diffuseMap", 2);
-	lightMapShader.SetUniform1i("u_material.specularMap", 3);
-	lightMapShader.SetUniform1i("u_material.emissionMap", 4);
-	lightMapShader.SetUniform1f("u_material.shininess", 64.0f);
-	lightMapShader.SetUniform3f("u_light.ambient", 0.06f, 0.06f, 0.06f);
-	lightMapShader.SetUniform3f("u_light.diffuse", 0.5f, 0.5f, 0.5f);
-	lightMapShader.SetUniform3f("u_light.specular", 1.0f, 1.0f, 1.0f);
-	lightMapShader.UnBind();
+	TextureStbImage tex1("res/textures/wood.jpg", false);
+	TextureStbImage tex2("res/textures/yayi.png", true);
+	TextureStbImage tex3("res/textures/diffuseMap.png", false);
+	TextureStbImage tex4("res/textures/specularMap.png", false);
+	TextureStbImage tex5("res/textures/emissionMap.png", false);
+
+	//setting up uniform(s) whose values are updated only once
+	{
+		noTexShader_2.Bind();			//u_mvp, u_model, u_light.position, u_camPos			:: uniform(s) updated each frame
+		noTexShader_2.SetUniform3f("u_material.ambient", 1.0f, 0.5f, 0.31f);
+		noTexShader_2.SetUniform3f("u_material.diffuse", 1.0f, 0.5f, 0.31f);
+		noTexShader_2.SetUniform3f("u_material.specular", 1.0f, 0.5f, 0.31f);
+		noTexShader_2.SetUniform1f("u_material.shininess", 32.0f);
+		noTexShader_2.SetUniform3fv("u_light.ambient", glm::value_ptr(lightAmbient));
+		noTexShader_2.SetUniform3fv("u_light.diffuse", glm::value_ptr(lightDiffuse));
+		noTexShader_2.SetUniform3fv("u_light.specular", glm::value_ptr(lightSpecular));
+		noTexShader_2.UnBind();
+	}
+
+	{
+		texShader_3.Bind();				//u_mvp, u_model, u_mixValue, u_lightPos				:: uniform(s) updated each frame
+		texShader_3.SetUniform1i("u_textureWood", 0);
+		texShader_3.SetUniform1i("u_textureYayi", 1);
+		texShader_3.SetUniform3fv("u_lightColor", glm::value_ptr(lightDiffuse));
+		texShader_3.UnBind();
+	}
+
+	{
+		lightMapShader_4.Bind();			//u_mvp, u_model, u_light.position, u_camPos			:: uniform(s) updated each frame
+		lightMapShader_4.SetUniform1i("u_material.diffuseMap", 0);
+		lightMapShader_4.SetUniform1i("u_material.specularMap", 1);
+		lightMapShader_4.SetUniform1i("u_material.emissionMap", 2);
+		lightMapShader_4.SetUniform1f("u_material.shininess", 64.0f);
+		lightMapShader_4.SetUniform3fv("u_light.ambient", glm::value_ptr(lightAmbient));
+		lightMapShader_4.SetUniform3fv("u_light.diffuse", glm::value_ptr(lightDiffuse));
+		lightMapShader_4.SetUniform3fv("u_light.specular", glm::value_ptr(lightSpecular));
+		lightMapShader_4.UnBind();
+	}
 
 	//directional light
 	{
-		directionalLightShader.Bind();
-		directionalLightShader.SetUniform1i("u_material.diffuseMap", 2);
-		directionalLightShader.SetUniform1i("u_material.specularMap", 3);
-		directionalLightShader.SetUniform1f("u_material.shine", 128.0f);
-		directionalLightShader.SetUniform3f("u_light.direction", -0.2f, -1.0f, -0.3f);
-		directionalLightShader.SetUniform3f("u_light.ambient",    0.06f, 0.06f, 0.06f);
-		directionalLightShader.SetUniform3f("u_light.diffuse",    0.5f, 0.5f, 0.5f);
-		directionalLightShader.SetUniform3f("u_light.specular",   1.0f, 1.0f, 1.0f);
-		directionalLightShader.UnBind();
+		directionalLightShader_5.Bind();
+		directionalLightShader_5.SetUniform1i("u_material.diffuseMap", 2);
+		directionalLightShader_5.SetUniform1i("u_material.specularMap", 3);
+		directionalLightShader_5.SetUniform1f("u_material.shine", 128.0f);
+		directionalLightShader_5.SetUniform3f("u_light.direction", -0.2f, -1.0f, -0.3f);
+		directionalLightShader_5.SetUniform3fv("u_light.ambient", glm::value_ptr(lightAmbient));
+		directionalLightShader_5.SetUniform3fv("u_light.diffuse", glm::value_ptr(lightDiffuse));
+		directionalLightShader_5.SetUniform3fv("u_light.specular", glm::value_ptr(lightSpecular));
+		directionalLightShader_5.UnBind();
 	}
 	//point light
 	{
-		pointLightShader.Bind();
-		pointLightShader.SetUniform1i("u_material.diffuseMap", 2);
-		pointLightShader.SetUniform1i("u_material.specularMap", 3);
-		pointLightShader.SetUniform1f("u_material.shininess", 128.0f);
-		pointLightShader.SetUniform3f("u_light.ambient", 0.15f, 0.15f, 0.15f);
-		pointLightShader.SetUniform3f("u_light.diffuse", 0.5f, 0.5f, 0.5f);
-		pointLightShader.SetUniform3f("u_light.specular", 1.0f, 1.0f, 1.0f);
-		pointLightShader.SetUniform1f("u_light.constant", 1.0f);
-		pointLightShader.SetUniform1f("u_light.linear", 0.09f);
-		pointLightShader.SetUniform1f("u_light.quadratic", 0.032f);
-		pointLightShader.UnBind();
+		pointLightShader_6.Bind();
+		pointLightShader_6.SetUniform1i("u_material.diffuseMap", 2);
+		pointLightShader_6.SetUniform1i("u_material.specularMap", 3);
+		pointLightShader_6.SetUniform1f("u_material.shininess", 128.0f);
+		pointLightShader_6.SetUniform3fv("u_light.ambient", glm::value_ptr(lightAmbient));
+		pointLightShader_6.SetUniform3fv("u_light.diffuse", glm::value_ptr(lightDiffuse));
+		pointLightShader_6.SetUniform3fv("u_light.specular", glm::value_ptr(lightSpecular));
+		pointLightShader_6.SetUniform1f("u_light.constant", 1.0f);
+		pointLightShader_6.SetUniform1f("u_light.linear", 0.09f);
+		pointLightShader_6.SetUniform1f("u_light.quadratic", 0.032f);
+		pointLightShader_6.UnBind();
 	}
 	//spot light (smooth)
 	{
-		spotLightShader.Bind();
-		spotLightShader.SetUniform1i("u_material.diffuseMap", 2);
-		spotLightShader.SetUniform1i("u_material.specularMap", 3);
-		spotLightShader.SetUniform1f("u_material.shininess", 128.0f);
-		//spotLightShader.SetUniform1f("u_light.cutoff", glm::cos(glm::radians(5.0f)));		//for nomal spotlight
-		spotLightShader.SetUniform1f("u_light.innerCutoff", glm::cos(glm::radians(5.5f)));		//for smooth spotlight
-		spotLightShader.SetUniform1f("u_light.outerCutoff", glm::cos(glm::radians(10.5f)));		//for smooth spotlight
-		spotLightShader.SetUniform3f("u_light.ambient", 0.15f, 0.15f, 0.15f);
-		spotLightShader.SetUniform3f("u_light.diffuse", 0.5f, 0.5f, 0.5f);
-		spotLightShader.SetUniform3f("u_light.specular", 1.0f, 1.0f, 1.0f);
-		spotLightShader.SetUniform1f("u_light.constant", 1.0f);
-		spotLightShader.SetUniform1f("u_light.linear", 0.027f);
-		spotLightShader.SetUniform1f("u_light.quadratic", 0.0028f);
-		spotLightShader.UnBind();
+		spotLightShader_7.Bind();
+		spotLightShader_7.SetUniform1i("u_material.diffuseMap", 2);
+		spotLightShader_7.SetUniform1i("u_material.specularMap", 3);
+		spotLightShader_7.SetUniform1f("u_material.shininess", 128.0f);
+		spotLightShader_7.SetUniform1f("u_light.innerCutoff", glm::cos(glm::radians(5.5f)));		//for smooth spotlight
+		spotLightShader_7.SetUniform1f("u_light.outerCutoff", glm::cos(glm::radians(10.5f)));		//for smooth spotlight
+		spotLightShader_7.SetUniform3f("u_light.ambient", 0.15f, 0.15f, 0.15f);
+		spotLightShader_7.SetUniform3f("u_light.diffuse", 0.5f, 0.5f, 0.5f);
+		spotLightShader_7.SetUniform3f("u_light.specular", 1.0f, 1.0f, 1.0f);
+		spotLightShader_7.SetUniform1f("u_light.constant", 1.0f);
+		spotLightShader_7.SetUniform1f("u_light.linear", 0.027f);
+		spotLightShader_7.SetUniform1f("u_light.quadratic", 0.0028f);
+		spotLightShader_7.UnBind();
 	}
 
 	glm::vec3 pointLightPosition[] = {
-		glm::vec3(2.0f, -1.0f,  1.2f),
-		glm::vec3(5.3f,  0.0f,  1.2f),
-		glm::vec3(4.2f,  1.0f,  -2.0f),
-		glm::vec3(3.1f,  2.5f,  1.2f)
+		cubeSetupPos + glm::vec3(2.0f, -1.0f,  1.2f),
+		cubeSetupPos + glm::vec3(5.3f,  0.0f,  1.2f),
+		cubeSetupPos + glm::vec3(4.2f,  1.0f,  -2.0f),
+		cubeSetupPos + glm::vec3(3.1f,  2.5f,  1.2f)
 	};
 
 	glm::vec3 pointLightColors[] = {
@@ -242,61 +241,58 @@ int main() {
 		glm::vec3(0.2f, 0.2f, 1.0f)
 	};
 	//mixed light 
-	{// massive ya?
-		mixedLightShader.Bind();
-		//mixedLightShader.SetUniform1i("u_material.texture_diffuse1", 2);
-		//mixedLightShader.SetUniform1i("u_material.texture_specular1", 3);
-		mixedLightShader.SetUniform1f("u_material.shininess", 64.0f);
+	{
+		mixedLightShader_8.Bind();
+		mixedLightShader_8.SetUniform1f("u_material.shininess", 64.0f);
 
-		mixedLightShader.SetUniform3f("u_dLight.direction", -0.5f, -0.5f, -0.3f);
-		mixedLightShader.SetUniform3f("u_dLight.ambient" , 0.1f, 0.1f, 0.1f);
-		mixedLightShader.SetUniform3f("u_dLight.diffuse" , 0.4f, 0.4f, 0.4f);
-		mixedLightShader.SetUniform3f("u_dLight.specular", 0.0f, 0.0f, 0.0f);
+		mixedLightShader_8.SetUniform3f("u_dLight.direction", -0.5f, -0.5f, -0.3f);
+		mixedLightShader_8.SetUniform3f("u_dLight.ambient" , 0.1f, 0.1f, 0.1f);
+		mixedLightShader_8.SetUniform3f("u_dLight.diffuse" , 0.4f, 0.4f, 0.4f);
+		mixedLightShader_8.SetUniform3f("u_dLight.specular", 0.0f, 0.0f, 0.0f);
+		
+		//number of point lights (4 in this case) is defined inside the shader
+		mixedLightShader_8.SetUniform3fv("u_pLight[0].position", glm::value_ptr(pointLightPosition[0]));
+		mixedLightShader_8.SetUniform3f("u_pLight[0].ambient", 0.0f, 0.0f, 0.0f);
+		mixedLightShader_8.SetUniform3fv("u_pLight[0].diffuse", glm::value_ptr(pointLightColors[0]));
+		mixedLightShader_8.SetUniform3fv("u_pLight[0].specular", glm::value_ptr(pointLightColors[0]));
+		mixedLightShader_8.SetUniform1f("u_pLight[0].constant", 1.0f);
+		mixedLightShader_8.SetUniform1f("u_pLight[0].linear", 0.045f);
+		mixedLightShader_8.SetUniform1f("u_pLight[0].quadratic", 0.0075f);
 
-		mixedLightShader.SetUniform3fv("u_pLight[0].position", glm::value_ptr(pointLightPosition[0]));
-		mixedLightShader.SetUniform3f("u_pLight[0].ambient", 0.0f, 0.0f, 0.0f);
-		mixedLightShader.SetUniform3fv("u_pLight[0].diffuse", glm::value_ptr(pointLightColors[0]));
-		mixedLightShader.SetUniform3fv("u_pLight[0].specular", glm::value_ptr(pointLightColors[0]));
-		mixedLightShader.SetUniform1f("u_pLight[0].constant", 1.0f);
-		mixedLightShader.SetUniform1f("u_pLight[0].linear", 0.045f);
-		mixedLightShader.SetUniform1f("u_pLight[0].quadratic", 0.0075f);
+		mixedLightShader_8.SetUniform3fv("u_pLight[1].position", glm::value_ptr(pointLightPosition[1]));
+		mixedLightShader_8.SetUniform3f("u_pLight[1].ambient", 0.0f, 0.0f, 0.0f);
+		mixedLightShader_8.SetUniform3fv("u_pLight[1].diffuse", glm::value_ptr(pointLightColors[1]));
+		mixedLightShader_8.SetUniform3fv("u_pLight[1].specular", glm::value_ptr(pointLightColors[1]));
+		mixedLightShader_8.SetUniform1f("u_pLight[1].constant", 1.0f);
+		mixedLightShader_8.SetUniform1f("u_pLight[1].linear", 0.045f);
+		mixedLightShader_8.SetUniform1f("u_pLight[1].quadratic", 0.0075f);
 
-		mixedLightShader.SetUniform3fv("u_pLight[1].position", glm::value_ptr(pointLightPosition[1]));
-		mixedLightShader.SetUniform3f("u_pLight[1].ambient", 0.0f, 0.0f, 0.0f);
-		mixedLightShader.SetUniform3fv("u_pLight[1].diffuse", glm::value_ptr(pointLightColors[1]));
-		mixedLightShader.SetUniform3fv("u_pLight[1].specular", glm::value_ptr(pointLightColors[1]));
-		mixedLightShader.SetUniform1f("u_pLight[1].constant", 1.0f);
-		mixedLightShader.SetUniform1f("u_pLight[1].linear", 0.045f);
-		mixedLightShader.SetUniform1f("u_pLight[1].quadratic", 0.0075f);
+		mixedLightShader_8.SetUniform3fv("u_pLight[2].position", glm::value_ptr(pointLightPosition[2]));
+		mixedLightShader_8.SetUniform3f("u_pLight[2].ambient", 0.0f, 0.0f, 0.0f);
+		mixedLightShader_8.SetUniform3fv("u_pLight[2].diffuse", glm::value_ptr(pointLightColors[2]));
+		mixedLightShader_8.SetUniform3fv("u_pLight[2].specular", glm::value_ptr(pointLightColors[2]));
+		mixedLightShader_8.SetUniform1f("u_pLight[2].constant", 1.0f);
+		mixedLightShader_8.SetUniform1f("u_pLight[2].linear", 0.045f);
+		mixedLightShader_8.SetUniform1f("u_pLight[2].quadratic", 0.0075f);
 
-		mixedLightShader.SetUniform3fv("u_pLight[2].position", glm::value_ptr(pointLightPosition[2]));
-		mixedLightShader.SetUniform3f("u_pLight[2].ambient", 0.0f, 0.0f, 0.0f);
-		mixedLightShader.SetUniform3fv("u_pLight[2].diffuse", glm::value_ptr(pointLightColors[2]));
-		mixedLightShader.SetUniform3fv("u_pLight[2].specular", glm::value_ptr(pointLightColors[2]));
-		mixedLightShader.SetUniform1f("u_pLight[2].constant", 1.0f);
-		mixedLightShader.SetUniform1f("u_pLight[2].linear", 0.045f);
-		mixedLightShader.SetUniform1f("u_pLight[2].quadratic", 0.0075f);
+		mixedLightShader_8.SetUniform3fv("u_pLight[3].position", glm::value_ptr(pointLightPosition[3]));
+		mixedLightShader_8.SetUniform3f("u_pLight[3].ambient", 0.0f, 0.0f, 0.0f);
+		mixedLightShader_8.SetUniform3fv("u_pLight[3].diffuse", glm::value_ptr(pointLightColors[3]));
+		mixedLightShader_8.SetUniform3fv("u_pLight[3].specular", glm::value_ptr(pointLightColors[3]));
+		mixedLightShader_8.SetUniform1f("u_pLight[3].constant", 1.0f);
+		mixedLightShader_8.SetUniform1f("u_pLight[3].linear", 0.045f);
+		mixedLightShader_8.SetUniform1f("u_pLight[3].quadratic", 0.0075f);
 
-		mixedLightShader.SetUniform3fv("u_pLight[3].position", glm::value_ptr(pointLightPosition[3]));
-		mixedLightShader.SetUniform3f("u_pLight[3].ambient", 0.0f, 0.0f, 0.0f);
-		mixedLightShader.SetUniform3fv("u_pLight[3].diffuse", glm::value_ptr(pointLightColors[3]));
-		mixedLightShader.SetUniform3fv("u_pLight[3].specular", glm::value_ptr(pointLightColors[3]));
-		mixedLightShader.SetUniform1f("u_pLight[3].constant", 1.0f);
-		mixedLightShader.SetUniform1f("u_pLight[3].linear", 0.045f);
-		mixedLightShader.SetUniform1f("u_pLight[3].quadratic", 0.0075f);
-
-		mixedLightShader.SetUniform3f("u_sLight.ambient", 0.0f, 0.0f, 0.0f);
-		mixedLightShader.SetUniform3f("u_sLight.diffuse", 0.8f, 0.8f, 0.8f);
-		mixedLightShader.SetUniform3f("u_sLight.specular", 1.0f, 1.0f, 1.0f);
-		mixedLightShader.SetUniform1f("u_sLight.constant", 1.0f);
-		mixedLightShader.SetUniform1f("u_sLight.linear", 0.027f);
-		mixedLightShader.SetUniform1f("u_sLight.quadratic", 0.0028f);
-		mixedLightShader.SetUniform1f("u_sLight.innerCutoff", glm::cos(glm::radians(5.5f)));		//for smooth spotlight
-		mixedLightShader.SetUniform1f("u_sLight.outerCutoff", glm::cos(glm::radians(10.5f)));		//for smooth spotlight
-		mixedLightShader.UnBind();
+		mixedLightShader_8.SetUniform3f("u_sLight.ambient", 0.0f, 0.0f, 0.0f);
+		mixedLightShader_8.SetUniform3f("u_sLight.diffuse", 0.8f, 0.8f, 0.8f);
+		mixedLightShader_8.SetUniform3f("u_sLight.specular", 1.0f, 1.0f, 1.0f);
+		mixedLightShader_8.SetUniform1f("u_sLight.constant", 1.0f);
+		mixedLightShader_8.SetUniform1f("u_sLight.linear", 0.027f);
+		mixedLightShader_8.SetUniform1f("u_sLight.quadratic", 0.0028f);
+		mixedLightShader_8.SetUniform1f("u_sLight.innerCutoff", glm::cos(glm::radians(5.5f)));		//for smooth spotlight
+		mixedLightShader_8.SetUniform1f("u_sLight.outerCutoff", glm::cos(glm::radians(10.5f)));		//for smooth spotlight
+		mixedLightShader_8.UnBind();
 	}
-
-	Model crytek("res/EUL/EUL4.obj");
 
 	glm::vec3 cubePositions[] = {
 		glm::vec3( 2.0f, -2.0f,  0.0f),
@@ -311,11 +307,21 @@ int main() {
 		glm::vec3( 5.4f, -2.0f, -1.6f)
 	};
 
+	//ImGui::CreateContext();
+	//ImGui_ImplGlfwGL3_Init(window, true);
+	//ImGui::StyleColorsDark();
+
 	glEnable(GL_DEPTH_TEST);
 
-	ImGui::CreateContext();
-	ImGui_ImplGlfwGL3_Init(window, true);
-	ImGui::StyleColorsDark();
+	Model crytek("res/nanosuit/nanosuit.obj");
+	
+	//Model crytek("res/EUL/EUL4.obj");
+	//ImportedModelSetupPos = glm::vec3(-6.0f, 1.5f, 3.0f);
+
+	glm::mat4 model;
+	glm::mat4 view;
+	glm::mat4 projection;
+	glm::mat4 mvp;
 
 	while (!glfwWindowShouldClose(window)) {
 		float currFrame = (float)glfwGetTime();
@@ -327,96 +333,140 @@ int main() {
 		GLCall(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));
 		GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
-		ImGui_ImplGlfwGL3_NewFrame();
+		//ImGui_ImplGlfwGL3_NewFrame();
 
-		/*GLCall(glBindVertexArray(lampVao));
-
-		normalShader.Bind();
-		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, -5.0f));
-		model = glm::rotate(model, float(glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
-		glm::mat4 view = camera.GetViewMatrix();
-		glm::mat4 projection = glm::perspective(glm::radians(camera.fov), (float)renderer.width / renderer.height, 0.1f, 100.0f);
-		glm::mat4 mvp = projection * view * model;
-		normalShader.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
-		//normalShader.SetUniform3fv("u_objectColor", glm::value_ptr(objectColor));		//used for 2_FragmentShader
-		normalShader.SetUniformMat4fv("u_model", glm::value_ptr(model));
-		normalShader.SetUniform3fv("u_light.position", glm::value_ptr(lightPos));
-		normalShader.SetUniform3fv("u_camPos", glm::value_ptr(camera.position));
-		GLCall(glDrawArrays(GL_TRIANGLES, 0, 36));
-
-		lampShader.Bind();
-		model = glm::translate(glm::mat4(1.0f), lightPos);
-		model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
-		mvp = projection * view * model;
-		lampShader.SetUniform3fv("u_lightColor", glm::value_ptr(lightColor));
-		lampShader.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
-		GLCall(glDrawArrays(GL_TRIANGLES, 0, 36));
-
-		GLCall(glBindVertexArray(texCubeVao));
-
-		texShader.Bind();
-		model = glm::translate(glm::mat4(1.0f), glm::vec3(-5.0f, -2.0f, 0.0f));
-		model = glm::rotate(model, float(glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.2f));
-		mvp = projection * view * model;
-		texShader.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
-		texShader.SetUniform1f("u_mixValue", renderer.mix);
-		texShader.SetUniformMat4fv("u_model", glm::value_ptr(model));
-		texShader.SetUniform3fv("u_lightPos", glm::value_ptr(lightPos));
-		GLCall(glDrawArrays(GL_TRIANGLES, 0, 36));
-
-		lightMapShader.Bind();
-		model = glm::translate(glm::mat4(1.0f), glm::vec3(-2.5f, -2.0f, -2.5f));
-		model = glm::rotate(model, float(glfwGetTime()), glm::vec3(0.7f, 1.0f, 0.0f));
-		mvp = projection * view * model;
-		lightMapShader.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
-		lightMapShader.SetUniformMat4fv("u_model", glm::value_ptr(model));
-		lightMapShader.SetUniform3fv("u_light.position", glm::value_ptr(lightPos));
-		lightMapShader.SetUniform3fv("u_camPos", glm::value_ptr(camera.position));
-		GLCall(glDrawArrays(GL_TRIANGLES, 0, 36));*/
-
-		GLCall(glBindVertexArray(lampVao));
-		lampShader.Bind();
-
-		glm::mat4 view = camera.GetViewMatrix();
-		glm::mat4 projection = glm::perspective(glm::radians(camera.fov), (float)renderer.width / renderer.height, 0.1f, 100.0f);
-		glm::mat4 model;
-
-		for (int i = 0; i < 4; ++i) {
-			model = glm::translate(glm::mat4(1.0f), pointLightPosition[i]);
-			model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
-			glm::mat4 mvp = projection * view * model;
-			lampShader.SetUniform3fv("u_lightColor", glm::value_ptr(pointLightColors[i]));
-			lampShader.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
-			GLCall(glDrawArrays(GL_TRIANGLES, 0, 36));
-		}
-
-		mixedLightShader.Bind();
-		model = glm::translate(glm::mat4(1.0f), glm::vec3(4.0f, -2.0f, 0.0f));
-		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
-		glm::mat4 mvp = projection * view * model;
-		mixedLightShader.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
-		mixedLightShader.SetUniformMat4fv("u_model", glm::value_ptr(model));
-		mixedLightShader.SetUniform3fv("u_sLight.direction", glm::value_ptr(camera.front));
-		mixedLightShader.SetUniform3fv("u_camPos", glm::value_ptr(camera.position));
-		crytek.Draw(mixedLightShader);
+		view = camera.GetViewMatrix();
+		projection = glm::perspective(glm::radians(camera.fov), (float)renderer.width / renderer.height, 0.1f, 100.0f);
 
 		{
+			GLCall(glBindVertexArray(nonTexturedCubeVao));
+			lampShader_1.Bind();
+			model = glm::translate(glm::mat4(1.0f), lightPos);
+			model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
+			mvp = projection * view * model;
+			lampShader_1.SetUniform3fv("u_lightColor", glm::value_ptr(lightDiffuse));
+			lampShader_1.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
+			GLCall(glDrawArrays(GL_TRIANGLES, 0, 36));
+			lampShader_1.UnBind();
+		}
+		
+		{
+			GLCall(glBindVertexArray(nonTexturedCubeVao));
+			noTexShader_2.Bind();
+			model = glm::translate(glm::mat4(1.0f), firstCubePos + glm::vec3(0.0f, 0.0f, 0.0f));
+			model = glm::rotate(model, float(glfwGetTime()), glm::vec3(1.0f, 0.2f, 0.7f));
+			mvp = projection * view * model;
+			noTexShader_2.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
+			noTexShader_2.SetUniformMat4fv("u_model", glm::value_ptr(model));
+			noTexShader_2.SetUniform3fv("u_light.position", glm::value_ptr(lightPos));
+			noTexShader_2.SetUniform3fv("u_camPos", glm::value_ptr(camera.position));
+			GLCall(glDrawArrays(GL_TRIANGLES, 0, 36));
+			noTexShader_2.UnBind();
+		}
+
+		{
+			GLCall(glBindVertexArray(texturedCubeVao));
+			tex1.Bind(0);
+			tex2.Bind(1);
+			texShader_3.Bind();
+			model = glm::translate(glm::mat4(1.0f), firstCubePos + glm::vec3(2.0f, 0.0f, 0.0f));
+			model = glm::rotate(model, float(glfwGetTime()), glm::vec3(1.0f, 0.2f, 0.7f));
+			mvp = projection * view * model;
+			texShader_3.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
+			texShader_3.SetUniformMat4fv("u_model", glm::value_ptr(model));
+			texShader_3.SetUniform1f("u_mixValue", renderer.mix);
+			texShader_3.SetUniform3fv("u_lightPos", glm::value_ptr(lightPos));
+			GLCall(glDrawArrays(GL_TRIANGLES, 0, 36));
+			texShader_3.UnBind();
+			tex1.UnBind();
+			tex2.UnBind();
+		}
+
+		{
+			GLCall(glBindVertexArray(texturedCubeVao));
+			tex3.Bind(0);
+			tex4.Bind(1);
+			tex5.Bind(2);
+			lightMapShader_4.Bind();
+			model = glm::translate(glm::mat4(1.0f), firstCubePos + glm::vec3(4.0f, 0.0f, 0.0f));
+			model = glm::rotate(model, float(glfwGetTime()), glm::vec3(1.0f, 0.2f, 0.7f));
+			mvp = projection * view * model;
+			lightMapShader_4.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
+			lightMapShader_4.SetUniformMat4fv("u_model", glm::value_ptr(model));
+			lightMapShader_4.SetUniform3fv("u_light.position", glm::value_ptr(lightPos));
+			lightMapShader_4.SetUniform3fv("u_camPos", glm::value_ptr(camera.position));
+			GLCall(glDrawArrays(GL_TRIANGLES, 0, 36));
+			lightMapShader_4.UnBind();
+			tex3.UnBind();
+			tex4.UnBind();
+			tex5.UnBind();
+		}
+
+		{//4 point lights & 10 cubes setup
+			GLCall(glBindVertexArray(nonTexturedCubeVao));
+			lampShader_1.Bind();
+			for (int i = 0; i < 4; ++i) {
+				model = glm::translate(glm::mat4(1.0f), pointLightPosition[i]);
+				model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
+				mvp = projection * view * model;
+				lampShader_1.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
+				lampShader_1.SetUniform3fv("u_lightColor", glm::value_ptr(pointLightColors[i]));
+				GLCall(glDrawArrays(GL_TRIANGLES, 0, 36));
+			}
+			lampShader_1.UnBind();
+
+			GLCall(glBindVertexArray(texturedCubeVao));
+			tex3.Bind(0);
+			tex4.Bind(1);
+			mixedLightShader_8.Bind();
+			mixedLightShader_8.SetUniform1i("u_material.texture_diffuse1", 0);
+			mixedLightShader_8.SetUniform1i("u_material.texture_specular1", 1);
+
+			for (int i = 0; i < 10; ++i) {
+				model = glm::translate(glm::mat4(1.0f), cubeSetupPos + cubePositions[i]);
+				mvp = projection * view * model;
+				mixedLightShader_8.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
+				mixedLightShader_8.SetUniformMat4fv("u_model", glm::value_ptr(model));
+				mixedLightShader_8.SetUniform3fv("u_sLight.direction", glm::value_ptr(camera.front));
+				mixedLightShader_8.SetUniform3fv("u_camPos", glm::value_ptr(camera.position));
+				GLCall(glDrawArrays(GL_TRIANGLES, 0, 36));
+			}
+			mixedLightShader_8.UnBind();
+			tex3.UnBind();
+			tex4.UnBind();
+		}
+
+		{//imported model setup
+			mixedLightShader_8.Bind();
+			model = glm::translate(glm::mat4(1.0f), ImportedModelSetupPos);
+			model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
+			mvp = projection * view * model;
+			mixedLightShader_8.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
+			mixedLightShader_8.SetUniformMat4fv("u_model", glm::value_ptr(model));
+			mixedLightShader_8.SetUniform3fv("u_sLight.direction", glm::value_ptr(camera.front));
+			mixedLightShader_8.SetUniform3fv("u_camPos", glm::value_ptr(camera.position));
+			crytek.Draw(mixedLightShader_8);
+			mixedLightShader_8.UnBind();
+		}
+
+		/*{
 			ImGui::Text("%.1f FPS", ImGui::GetIO().Framerate);
 		}
 
 		ImGui::Render();
 		ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
-		
+		*/
+
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
 
-	glDeleteVertexArrays(1, &texCubeVao);
-	glDeleteVertexArrays(1, &lampVao);
+	glDeleteVertexArrays(1, &texturedCubeVao);
+	glDeleteVertexArrays(1, &nonTexturedCubeVao);
 	glDeleteBuffers(1, &cubeVbo);
 
 	glfwTerminate();
-	std::cin.get();
+	//std::cin.get();
 }
 
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height) {

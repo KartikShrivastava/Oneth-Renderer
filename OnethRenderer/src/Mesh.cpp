@@ -3,7 +3,7 @@
 #include "CheckGLErrors.h"
 #include "Mesh.h"
 
-Mesh::Mesh(std::vector<Vertex> v, std::vector<Texture> t, std::vector<unsigned int> i){
+Mesh::Mesh(const std::vector<Vertex>& v, const  std::vector<Texture>& t, const  std::vector<unsigned int>& i){
 	vertices = v;
 	textures = t;
 	indices = i;
@@ -26,16 +26,16 @@ void Mesh::SetupMesh(){
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoords));
 	glEnableVertexAttribArray(1);
 
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoords));
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
 	glEnableVertexAttribArray(2);
 
 	glBindVertexArray(0);
 }
 
-void Mesh::Draw(Shader shader){
+void Mesh::Draw(Shader& shader){
 	unsigned int diffuseN = 1;
 	unsigned int specularN = 1;
 	for (unsigned int i = 0; i < textures.size(); ++i) {
