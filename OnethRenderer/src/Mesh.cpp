@@ -46,9 +46,9 @@ void Mesh::Draw(Shader& shader){
 		else if (name == "texture_specular")
 			number = std::to_string(specularN++);
 
-		//shader.SetUniform1i(("u_material." + name + number).c_str(), i);
 		const GLchar* ch = ("u_material." + name + number).c_str();
 		glUniform1i(glGetUniformLocation(shader.GetObjectID(), ch), i);
+		//shader.SetUniform1i(ch, i);		//TODO: find out why is it giving so much uniform errors
 
 		glBindTexture(GL_TEXTURE_2D, textures[i].id);
 	}

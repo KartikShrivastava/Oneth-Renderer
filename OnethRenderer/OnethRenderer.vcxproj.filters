@@ -57,6 +57,9 @@
     <ClCompile Include="src\Application.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Text.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Shader.h">
@@ -104,6 +107,9 @@
     <ClInclude Include="src\expat\imgui\stb_truetype.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Text.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\shaders\2_VertexShader.glsl" />
@@ -123,5 +129,7 @@
     <None Include="src\shaders\3_TexturedFragmentShader.glsl" />
     <None Include="src\shaders\2_MaterialFragmentShader.glsl" />
     <None Include="src\shaders\4_TexturedMaterialFragmentShader.glsl" />
+    <None Include="src\shaders\12_textFragmentShader.glsl" />
+    <None Include="src\shaders\12_textVertexShader.glsl" />
   </ItemGroup>
 </Project>

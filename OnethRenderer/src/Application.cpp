@@ -17,6 +17,7 @@
 #include "Model.h"
 #include "expat/imgui/imgui.h"
 #include "expat/imgui/imgui_impl_glfw_gl3.h"
+#include "Text.h"
 
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 void ProcessInput(GLFWwindow* window);
@@ -30,6 +31,8 @@ glm::vec3 lightSpecular = glm::vec3(1.0f, 1.0f, 1.0f);
 glm::vec3 firstCubePos = glm::vec3(-1.0f, 0.0f, 0.0f);
 glm::vec3 cubeSetupPos = glm::vec3(-12.0f, 0.0f, 3.0f);
 glm::vec3 ImportedModelSetupPos = glm::vec3(-6.0f, -1.5f, 3.0f);
+bool mouseReleased = true;
+std::string debugLog="";
 
 Renderer renderer;
 Camera camera(glm::vec3(0.0f, 0.0f, 5.0f));
@@ -53,8 +56,6 @@ int main() {
 	glfwSetCursorPosCallback(window, MouseCallback);
 	glfwSetScrollCallback(window, ScrollCallback);
 
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		std::cout << "Unable to intialize GLAD" << std::endl;
 		return -1;
@@ -69,10 +70,10 @@ int main() {
 
 	float verticesBox[] = {
 	-0.5f, -0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    0.0f, 0.0f,
+	 0.5f,  0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    1.0f, 1.0f,
 	 0.5f, -0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    1.0f, 0.0f,
-	 0.5f,  0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    1.0f, 1.0f,
-	 0.5f,  0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    1.0f, 1.0f,
 	-0.5f,  0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    0.0f, 1.0f,
+	 0.5f,  0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    1.0f, 1.0f,
 	-0.5f, -0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    0.0f, 0.0f,
 
 	-0.5f, -0.5f,  0.5f,    0.0f,  0.0f,  1.0f,    0.0f, 0.0f,
@@ -89,11 +90,11 @@ int main() {
 	-0.5f, -0.5f,  0.5f,   -1.0f,  0.0f,  0.0f,    0.0f, 0.0f,
 	-0.5f,  0.5f,  0.5f,   -1.0f,  0.0f,  0.0f,    1.0f, 0.0f,
 
-	 0.5f,  0.5f,  0.5f,    1.0f,  0.0f,  0.0f,    1.0f, 0.0f,
 	 0.5f,  0.5f, -0.5f,    1.0f,  0.0f,  0.0f,    1.0f, 1.0f,
-	 0.5f, -0.5f, -0.5f,    1.0f,  0.0f,  0.0f,    0.0f, 1.0f,
+	 0.5f,  0.5f,  0.5f,    1.0f,  0.0f,  0.0f,    1.0f, 0.0f,
 	 0.5f, -0.5f, -0.5f,    1.0f,  0.0f,  0.0f,    0.0f, 1.0f,
 	 0.5f, -0.5f,  0.5f,    1.0f,  0.0f,  0.0f,    0.0f, 0.0f,
+	 0.5f, -0.5f, -0.5f,    1.0f,  0.0f,  0.0f,    0.0f, 1.0f,
 	 0.5f,  0.5f,  0.5f,    1.0f,  0.0f,  0.0f,    1.0f, 0.0f,
 
 	-0.5f, -0.5f, -0.5f,    0.0f, -1.0f,  0.0f,    0.0f, 1.0f,
@@ -103,11 +104,11 @@ int main() {
 	-0.5f, -0.5f,  0.5f,    0.0f, -1.0f,  0.0f,    0.0f, 0.0f,
 	-0.5f, -0.5f, -0.5f,    0.0f, -1.0f,  0.0f,    0.0f, 1.0f,
 
-	-0.5f,  0.5f, -0.5f,    0.0f,  1.0f,  0.0f,    0.0f, 1.0f,
 	 0.5f,  0.5f, -0.5f,    0.0f,  1.0f,  0.0f,    1.0f, 1.0f,
-	 0.5f,  0.5f,  0.5f,    0.0f,  1.0f,  0.0f,    1.0f, 0.0f,
+	-0.5f,  0.5f, -0.5f,    0.0f,  1.0f,  0.0f,    0.0f, 1.0f,
 	 0.5f,  0.5f,  0.5f,    0.0f,  1.0f,  0.0f,    1.0f, 0.0f,
 	-0.5f,  0.5f,  0.5f,    0.0f,  1.0f,  0.0f,    0.0f, 0.0f,
+	 0.5f,  0.5f,  0.5f,    0.0f,  1.0f,  0.0f,    1.0f, 0.0f,
 	-0.5f,  0.5f, -0.5f,    0.0f,  1.0f,  0.0f,    0.0f, 1.0f
 	};
 	
@@ -183,7 +184,6 @@ int main() {
 		lightMapShader_4.SetUniform3fv("u_light.specular", glm::value_ptr(lightSpecular));
 		lightMapShader_4.UnBind();
 	}
-
 	//directional light
 	{
 		directionalLightShader_5.Bind();
@@ -228,10 +228,10 @@ int main() {
 	}
 
 	glm::vec3 pointLightPosition[] = {
-		cubeSetupPos + glm::vec3(2.0f, -1.0f,  1.2f),
-		cubeSetupPos + glm::vec3(5.3f,  0.0f,  1.2f),
-		cubeSetupPos + glm::vec3(4.2f,  1.0f,  -2.0f),
-		cubeSetupPos + glm::vec3(3.1f,  2.5f,  1.2f)
+		cubeSetupPos + glm::vec3( 3.0f,  0.0f, 2.0f),
+		cubeSetupPos + glm::vec3( 5.0f,  0.0f, 3.0f),
+		cubeSetupPos + glm::vec3( 6.0f,  0.0f,-2.0f),
+		cubeSetupPos + glm::vec3( 3.0f,  1.0f, 0.0f)
 	};
 
 	glm::vec3 pointLightColors[] = {
@@ -307,20 +307,32 @@ int main() {
 		glm::vec3( 5.4f, -2.0f, -1.6f)
 	};
 
-	//ImGui::CreateContext();
-	//ImGui_ImplGlfwGL3_Init(window, true);
-	//ImGui::StyleColorsDark();
+	ImGui::CreateContext();
+	ImGui_ImplGlfwGL3_Init(window, true);
+	ImGui::StyleColorsClassic();
 
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	//Model crytek("res/nanosuit/nanosuit.obj");
-	Model crytek("res/EUL/EUL4.obj");
-	ImportedModelSetupPos = glm::vec3(-6.0f, 1.5f, 3.0f);
+	Model crytek("res/nanosuit/nanosuit.obj");
+	//Model crytek("res/EUL/EUL4.obj");
+	//ImportedModelSetupPos = glm::vec3(-6.0f, 1.5f, 3.0f);
 
 	glm::mat4 model;
 	glm::mat4 view;
 	glm::mat4 projection;
 	glm::mat4 mvp;
+
+	Text textRenderer("res/fonts/pixel.ttf", 48);
+	Shader textShader("src/shaders/12_textVertexShader.glsl", "src/shaders/12_textFragmentShader.glsl");
+	glm::mat4 textOrthoProjMat = glm::ortho(0.0f, 1.0f * renderer.width, 0.0f, 1.0f * renderer.height);
+	textShader.Bind();
+	textShader.SetUniformMat4fv("u_projection", glm::value_ptr(textOrthoProjMat));
+	textShader.UnBind();
+
+	float x = 0.0f;
 
 	while (!glfwWindowShouldClose(window)) {
 		float currFrame = (float)glfwGetTime();
@@ -332,7 +344,7 @@ int main() {
 		GLCall(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));
 		GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
-		//ImGui_ImplGlfwGL3_NewFrame();
+		ImGui_ImplGlfwGL3_NewFrame();
 
 		view = camera.GetViewMatrix();
 		projection = glm::perspective(glm::radians(camera.fov), (float)renderer.width / renderer.height, 0.1f, 100.0f);
@@ -447,14 +459,18 @@ int main() {
 			crytek.Draw(mixedLightShader_8);
 			mixedLightShader_8.UnBind();
 		}
-
-		/*{
+		
+		textRenderer.Draw(textShader, debugLog, 10.0f, 10.0f, 0.2f, glm::vec3(0.0f, 0.0f, 0.0f));
+		
+		{
+			ImGui::Begin("Edit");
 			ImGui::Text("%.1f FPS", ImGui::GetIO().Framerate);
+			//ImGui::SliderFloat("Slide", &x, 0.0f, 10.0f);
+			//ImGui::Text("Change point lights position:");
+			ImGui::End();
 		}
-
 		ImGui::Render();
 		ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
-		*/
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -464,8 +480,9 @@ int main() {
 	glDeleteVertexArrays(1, &nonTexturedCubeVao);
 	glDeleteBuffers(1, &cubeVbo);
 
+	ImGui_ImplGlfwGL3_Shutdown();
+	ImGui::DestroyContext();
 	glfwTerminate();
-	//std::cin.get();
 }
 
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height) {
@@ -512,6 +529,7 @@ void ProcessInput(GLFWwindow* window) {
 }
 
 void MouseCallback(GLFWwindow* window, double xpos, double ypos) {
+
 	if (renderer.initialMouse) {
 		renderer.lastX = (float)xpos;
 		renderer.lastY = (float)ypos;
@@ -522,7 +540,17 @@ void MouseCallback(GLFWwindow* window, double xpos, double ypos) {
 	renderer.lastX = (float)xpos;
 	renderer.lastY = (float)ypos;
 
-	camera.ProcessMouse(xoffset, yoffset);
+	if (glfwGetMouseButton(window, 0) == GLFW_PRESS) {
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		debugLog = "Mouse pressed";
+		camera.ProcessMouse(xoffset, yoffset);
+		mouseReleased = false;
+	}
+	else if (!mouseReleased && glfwGetMouseButton(window, 0) == GLFW_RELEASE) {
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		debugLog = "Mouse released";
+		mouseReleased = true;
+	}
 }
 
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
