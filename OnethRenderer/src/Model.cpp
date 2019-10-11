@@ -61,10 +61,12 @@ Mesh Model::ProcessMesh(aiMesh * mesh, const aiScene * scene) {
 
 	if (mesh->mMaterialIndex >= 0) {
 		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-		std::vector<Texture> diffuse = LoadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
+		std::vector<Texture> diffuse;
+		LoadMaterialTextures(diffuse, material, aiTextureType_DIFFUSE, "texture_diffuse");
 		textures.insert(textures.end(), diffuse.begin(), diffuse.end());
 
-		std::vector<Texture> specular = LoadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
+		std::vector<Texture> specular;
+		LoadMaterialTextures(specular, material, aiTextureType_SPECULAR, "texture_specular");
 		textures.insert(textures.end(), specular.begin(), specular.end());
 	}
 
@@ -77,8 +79,7 @@ Mesh Model::ProcessMesh(aiMesh * mesh, const aiScene * scene) {
 	return Mesh(vertices, textures, indices);
 }
 
-std::vector<Texture> Model::LoadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName){
-	std::vector<Texture> textures;
+void Model::LoadMaterialTextures(std::vector<Texture>& textures, aiMaterial* mat, aiTextureType type, std::string typeName){
 	for (unsigned int i = 0; i < mat->GetTextureCount(type); ++i) {
 		aiString path;
 		mat->GetTexture(type, i, &path);
@@ -98,7 +99,6 @@ std::vector<Texture> Model::LoadMaterialTextures(aiMaterial* mat, aiTextureType 
 			textures.push_back(texture);
 		}
 	}
-	return textures;
 }
 
 void Model::Draw(Shader& shader){
@@ -132,13 +132,11 @@ unsigned int Model::LoadTextureFromFile(const char* path) {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-		stbi_image_free(data);
 	}
-	else {
+	else
 		std::cout << "Texture failed to load at path: " << path << std::endl;
-		stbi_image_free(data);
-	}
+	
+	stbi_image_free(data);
 
 	return textureID;
 }

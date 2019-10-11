@@ -3,8 +3,6 @@
 struct Material{
 	sampler2D texture_diffuse1;
 	sampler2D texture_specular1;
-	sampler2D texture_diffuse2;
-	sampler2D texture_specular2;
 	float shininess;
 };
 
@@ -48,8 +46,8 @@ vec3 CalculatePointLight(vec3 normal, PointLight pLight);
 vec3 CalculateSpotLight(vec3 normal);
 
 in vec3 t_worldPos;
-in vec2 t_texCoords;
 in vec3 t_normal;
+in vec2 t_texCoords;
 
 uniform Material u_material;
 uniform DirectionalLight u_dLight;

@@ -24,12 +24,11 @@ void Mesh::SetupMesh(){
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoords));
+
 	glEnableVertexAttribArray(0);
-
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoords));
 	glEnableVertexAttribArray(1);
-
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
 	glEnableVertexAttribArray(2);
 
 	glBindVertexArray(0);
@@ -47,7 +46,10 @@ void Mesh::Draw(Shader& shader){
 		else if (name == "texture_specular")
 			number = std::to_string(specularN++);
 
-		shader.SetUniform1i(("u_material." + name + number).c_str(), i);
+		//shader.SetUniform1i(("u_material." + name + number).c_str(), i);
+		const GLchar* ch = ("u_material." + name + number).c_str();
+		glUniform1i(glGetUniformLocation(shader.GetObjectID(), ch), i);
+
 		glBindTexture(GL_TEXTURE_2D, textures[i].id);
 	}
 
