@@ -145,6 +145,7 @@ int main() {
 	Shader pointLightShader_6("src/shaders/3_VertexShader.glsl", "src/shaders/6_PointLightFS.glsl");
 	Shader spotLightShader_7("src/shaders/3_VertexShader.glsl", "src/shaders/7_SpotLightSmoothFS.glsl");
 	Shader mixedLightShader_8("src/shaders/3_VertexShader.glsl", "src/shaders/8_MixedLightFS.glsl");
+	Shader depthTestShader_9("src/shaders/11_TestVS.glsl", "src/shaders/11_TestFS.glsl");
 
 	TextureStbImage tex1("res/textures/wood.jpg", false);
 	TextureStbImage tex2("res/textures/yayi.png", true);
@@ -316,9 +317,10 @@ int main() {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	Model crytek("res/nanosuit/nanosuit.obj");
-	//Model crytek("res/EUL/EUL4.obj");
+	//Model crytek("res/nanosuit/nanosuit.obj");
+	//Model crytek("res/monkey/monkey.obj");
 	//ImportedModelSetupPos = glm::vec3(-6.0f, 1.5f, 3.0f);
+	Model crytek("E:/GitHub/GLOBAL_DEPS/sponza/sponza.obj");
 
 	glm::mat4 model;
 	glm::mat4 view;
@@ -349,7 +351,7 @@ int main() {
 		view = camera.GetViewMatrix();
 		projection = glm::perspective(glm::radians(camera.fov), (float)renderer.width / renderer.height, 0.1f, 100.0f);
 
-		{
+		/*{
 			GLCall(glBindVertexArray(nonTexturedCubeVao));
 			lampShader_1.Bind();
 			model = glm::translate(glm::mat4(1.0f), lightPos);
@@ -445,12 +447,12 @@ int main() {
 			mixedLightShader_8.UnBind();
 			tex3.UnBind();
 			tex4.UnBind();
-		}
+		}*/
 
 		{//imported model setup
 			mixedLightShader_8.Bind();
 			model = glm::translate(glm::mat4(1.0f), ImportedModelSetupPos);
-			model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
+			model = glm::scale(model, glm::vec3(0.02f, 0.02f, 0.02f));
 			mvp = projection * view * model;
 			mixedLightShader_8.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
 			mixedLightShader_8.SetUniformMat4fv("u_model", glm::value_ptr(model));

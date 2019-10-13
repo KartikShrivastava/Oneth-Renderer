@@ -59,6 +59,11 @@ uniform vec3 u_camPos;
 out vec4 o_color;
 
 void main(){
+	vec4 textureColor = texture(u_material.texture_diffuse1, t_texCoords);
+	if(textureColor.a < 0.5){
+		discard;
+	} 
+
 	vec3 normal = normalize(t_normal);
 	vec3 result = CalculateDirectionalLight(normal);
 	for(int i=0; i<NUM_POINT_LIGHTS; ++i){
