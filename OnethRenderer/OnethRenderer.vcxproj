@@ -56,8 +56,9 @@
   <ItemGroup>
     <None Include="src\shaders\10_TestFS.glsl" />
     <None Include="src\shaders\10_TestVS.glsl" />
-    <None Include="src\shaders\11_TestFS.glsl" />
-    <None Include="src\shaders\11_TestVS.glsl" />
+    <None Include="src\shaders\10_DepthShaderFS.glsl" />
+    <None Include="src\shaders\11_SimpleTexturedFS.glsl" />
+    <None Include="src\shaders\4_VertexShader.glsl" />
     <None Include="src\shaders\12_textVertexShader.glsl" />
     <None Include="src\shaders\4_TexturedMaterialFragmentShader.glsl" />
     <None Include="src\shaders\3_TexturedFragmentShader.glsl" />

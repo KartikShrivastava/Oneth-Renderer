@@ -61,13 +61,32 @@ int main() {
 		return -1;
 	}
 
-	float verticesPlane[] = {
-		-0.5f, -0.5f,  0.0f,	0.0f, 0.0f,
-		 0.5f, -0.5f,  0.0f,	1.0f, 0.0f,
-		-0.5f,  0.5f,  0.0f,	0.0f, 1.0f,
-		 0.5f,  0.5f,  0.0f,	1.0f, 1.0f
-	};
 
+	glm::vec3 pointLightPosition[] = {
+		cubeSetupPos + glm::vec3( 3.0f,  0.0f, 2.0f),
+		cubeSetupPos + glm::vec3( 5.0f,  0.0f, 3.0f),
+		cubeSetupPos + glm::vec3( 6.0f,  0.0f,-2.0f),
+		cubeSetupPos + glm::vec3( 3.0f,  1.0f, 0.0f)
+	};
+	glm::vec3 pointLightColors[] = {
+		glm::vec3(1.0f, 0.5f, 0.2f),
+		glm::vec3(0.2f, 1.0f, 1.0f),
+		glm::vec3(0.8f, 0.2f, 0.5f),
+		glm::vec3(0.2f, 0.2f, 1.0f)
+	};
+	glm::vec3 cubePositions[] = {
+		glm::vec3( 2.0f, -2.0f,  0.0f),
+		glm::vec3( 3.1f, -2.0f,  0.1f),
+		glm::vec3( 4.2f, -2.0f,  0.5f),
+		glm::vec3( 5.3f, -2.0f, -0.3f),
+		glm::vec3( 6.4f, -2.0f, -0.2f),
+		glm::vec3( 2.3f, -1.0f,  0.2f),
+		glm::vec3( 3.1f,  0.0f,  0.1f),
+		glm::vec3( 3.9f, -1.0f,  0.5f),
+		glm::vec3( 4.8f, -2.0f,  2.3f),
+		glm::vec3( 5.4f, -2.0f, -1.6f)
+	};
+	
 	float verticesBox[] = {
 	-0.5f, -0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    0.0f, 0.0f,
 	 0.5f,  0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    1.0f, 1.0f,
@@ -116,7 +135,7 @@ int main() {
 	GLCall(glGenBuffers(1, &cubeVbo));
 	GLCall(glBindBuffer(GL_ARRAY_BUFFER, cubeVbo));
 	GLCall(glBufferData(GL_ARRAY_BUFFER, sizeof(verticesBox), verticesBox, GL_STATIC_DRAW));
-	
+
 	unsigned int texturedCubeVao;
 	GLCall(glGenVertexArrays(1, &texturedCubeVao));
 	GLCall(glBindVertexArray(texturedCubeVao));
@@ -136,7 +155,40 @@ int main() {
 	GLCall(glEnableVertexAttribArray(0));
 	GLCall(glEnableVertexAttribArray(1));
 	GLCall(glBindVertexArray(0));
+	GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+	float verticesPlane[] = {
+		-1.0f,  0.0f,  1.0f,	0.0f, 0.0f,
+		 1.0f,  0.0f,  1.0f,	5.0f, 0.0f,
+		 1.0f,  0.0f, -1.0f,	5.0f, 5.0f,
+		-1.0f,  0.0f, -1.0f,	0.0f, 5.0f
+	};
+
+	unsigned int indicesPlane[] = {
+		0, 2, 3,
+		0, 1, 2
+	};
 	
+	unsigned int planeVbo;
+	unsigned int planeVao;
+	unsigned int planeEbo;
+	GLCall(glGenBuffers(1, &planeVbo));
+	GLCall(glGenBuffers(1, &planeEbo));
+	GLCall(glGenVertexArrays(1, &planeVao));
+
+	GLCall(glBindVertexArray(planeVao));
+	GLCall(glBindBuffer(GL_ARRAY_BUFFER, planeVbo));
+	GLCall(glBufferData(GL_ARRAY_BUFFER, sizeof(verticesPlane), verticesPlane, GL_STATIC_DRAW));
+
+	GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, planeEbo));
+	GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicesPlane), indicesPlane, GL_STATIC_DRAW));
+
+	GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0));
+	GLCall(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float))));
+	GLCall(glEnableVertexAttribArray(0));
+	GLCall(glEnableVertexAttribArray(1));
+	GLCall(glBindVertexArray(0));
+
 	Shader lampShader_1("src/shaders/1_SimpleVertexShader.glsl", "src/shaders/1_SimpleFragmentShader.glsl");
 	Shader noTexShader_2("src/shaders/2_VertexShader.glsl", "src/shaders/2_MaterialFragmentShader.glsl");
 	Shader texShader_3("src/shaders/3_VertexShader.glsl", "src/shaders/3_TexturedFragmentShader.glsl");
@@ -145,13 +197,17 @@ int main() {
 	Shader pointLightShader_6("src/shaders/3_VertexShader.glsl", "src/shaders/6_PointLightFS.glsl");
 	Shader spotLightShader_7("src/shaders/3_VertexShader.glsl", "src/shaders/7_SpotLightSmoothFS.glsl");
 	Shader mixedLightShader_8("src/shaders/3_VertexShader.glsl", "src/shaders/8_MixedLightFS.glsl");
-	Shader depthTestShader_9("src/shaders/11_TestVS.glsl", "src/shaders/11_TestFS.glsl");
+	Shader depthTestShader_9("src/shaders/4_VertexShader.glsl", "src/shaders/10_DepthShaderFS.glsl");
+	Shader depthTestShader_10("src/shaders/3_VertexShader.glsl", "src/shaders/10_DepthShaderFS.glsl");
+	Shader stencilTestShader_11("src/shaders/3_VertexShader.glsl", "src/shaders/1_SimpleFragmentShader.glsl");
+	Shader planeShader_12("src/shaders/4_VertexShader.glsl", "src/shaders/11_SimpleTexturedFS.glsl");
 
 	TextureStbImage tex1("res/textures/wood.jpg", false);
 	TextureStbImage tex2("res/textures/yayi.png", true);
 	TextureStbImage tex3("res/textures/diffuseMap.png", false);
 	TextureStbImage tex4("res/textures/specularMap.png", false);
 	TextureStbImage tex5("res/textures/emissionMap.png", false);
+	TextureStbImage tex6("res/textures/brick.jpg", false);
 
 	//setting up uniform(s) whose values are updated only once
 	{
@@ -228,19 +284,6 @@ int main() {
 		spotLightShader_7.UnBind();
 	}
 
-	glm::vec3 pointLightPosition[] = {
-		cubeSetupPos + glm::vec3( 3.0f,  0.0f, 2.0f),
-		cubeSetupPos + glm::vec3( 5.0f,  0.0f, 3.0f),
-		cubeSetupPos + glm::vec3( 6.0f,  0.0f,-2.0f),
-		cubeSetupPos + glm::vec3( 3.0f,  1.0f, 0.0f)
-	};
-
-	glm::vec3 pointLightColors[] = {
-		glm::vec3(1.0f, 0.5f, 0.2f),
-		glm::vec3(0.2f, 1.0f, 1.0f),
-		glm::vec3(0.8f, 0.2f, 0.5f),
-		glm::vec3(0.2f, 0.2f, 1.0f)
-	};
 	//mixed light 
 	{
 		mixedLightShader_8.Bind();
@@ -295,32 +338,31 @@ int main() {
 		mixedLightShader_8.UnBind();
 	}
 
-	glm::vec3 cubePositions[] = {
-		glm::vec3( 2.0f, -2.0f,  0.0f),
-		glm::vec3( 3.1f, -2.0f,  0.1f),
-		glm::vec3( 4.2f, -2.0f,  0.5f),
-		glm::vec3( 5.3f, -2.0f, -0.3f),
-		glm::vec3( 6.4f, -2.0f, -0.2f),
-		glm::vec3( 2.3f, -1.0f,  0.2f),
-		glm::vec3( 3.1f,  0.0f,  0.1f),
-		glm::vec3( 3.9f, -1.0f,  0.5f),
-		glm::vec3( 4.8f, -2.0f,  2.3f),
-		glm::vec3( 5.4f, -2.0f, -1.6f)
-	};
+	{
+		planeShader_12.Bind();
+		planeShader_12.SetUniform1i("u_texture", 0);
+		planeShader_12.UnBind();
+	}
 
 	ImGui::CreateContext();
 	ImGui_ImplGlfwGL3_Init(window, true);
 	ImGui::StyleColorsClassic();
 
 	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+	
+	glEnable(GL_STENCIL_TEST);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+	glStencilFunc(GL_EQUAL, 0, 0xFF);
+	
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	//Model crytek("res/nanosuit/nanosuit.obj");
+	//Model crytek("E:/GitHub/GLOBAL_DEPS/sponza/sponza.obj");
 	//Model crytek("res/monkey/monkey.obj");
 	//ImportedModelSetupPos = glm::vec3(-6.0f, 1.5f, 3.0f);
-	Model crytek("E:/GitHub/GLOBAL_DEPS/sponza/sponza.obj");
 
 	glm::mat4 model;
 	glm::mat4 view;
@@ -344,14 +386,14 @@ int main() {
 		ProcessInput(window);
 		
 		GLCall(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));
-		GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+		GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT));
 
 		ImGui_ImplGlfwGL3_NewFrame();
 
 		view = camera.GetViewMatrix();
 		projection = glm::perspective(glm::radians(camera.fov), (float)renderer.width / renderer.height, 0.1f, 100.0f);
 
-		/*{
+		/*{//simple non-textured non-lit cube
 			GLCall(glBindVertexArray(nonTexturedCubeVao));
 			lampShader_1.Bind();
 			model = glm::translate(glm::mat4(1.0f), lightPos);
@@ -362,8 +404,8 @@ int main() {
 			GLCall(glDrawArrays(GL_TRIANGLES, 0, 36));
 			lampShader_1.UnBind();
 		}
-		
-		{
+
+		{//non-textured diffuse light lit cube
 			GLCall(glBindVertexArray(nonTexturedCubeVao));
 			noTexShader_2.Bind();
 			model = glm::translate(glm::mat4(1.0f), firstCubePos + glm::vec3(0.0f, 0.0f, 0.0f));
@@ -377,7 +419,7 @@ int main() {
 			noTexShader_2.UnBind();
 		}
 
-		{
+		{//textured diffuse light lit cube
 			GLCall(glBindVertexArray(texturedCubeVao));
 			tex1.Bind(0);
 			tex2.Bind(1);
@@ -395,7 +437,7 @@ int main() {
 			tex2.UnBind();
 		}
 
-		{
+		{//textured diffuse light lit cube with material implementation
 			GLCall(glBindVertexArray(texturedCubeVao));
 			tex3.Bind(0);
 			tex4.Bind(1);
@@ -447,7 +489,7 @@ int main() {
 			mixedLightShader_8.UnBind();
 			tex3.UnBind();
 			tex4.UnBind();
-		}*/
+		}
 
 		{//imported model setup
 			mixedLightShader_8.Bind();
@@ -458,8 +500,92 @@ int main() {
 			mixedLightShader_8.SetUniformMat4fv("u_model", glm::value_ptr(model));
 			mixedLightShader_8.SetUniform3fv("u_sLight.direction", glm::value_ptr(camera.front));
 			mixedLightShader_8.SetUniform3fv("u_camPos", glm::value_ptr(camera.position));
-			crytek.Draw(mixedLightShader_8);
+			//crytek.Draw(mixedLightShader_8);
 			mixedLightShader_8.UnBind();
+		}
+
+		{//depth test setup
+			depthTestShader_10.Bind();
+			tex1.Bind(0);
+			depthTestShader_10.SetUniform1i("u_texture_diffuse1", 0);
+			glBindVertexArray(texturedCubeVao);
+			for (int i = 0; i < 2; ++i) {
+				model = glm::translate(glm::mat4(1.0f), glm::vec3(0.1f * i, -1.5f, -3.0f * i));
+				mvp = projection * view * model;
+				depthTestShader_10.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+			}
+			glBindVertexArray(0);
+			depthTestShader_10.UnBind();
+
+			depthTestShader_9.Bind();
+			model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(10.0f, 10.0f, 10.0f));
+			mvp = projection * view * model;
+			depthTestShader_9.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
+			tex6.Bind(0);
+			depthTestShader_9.SetUniform1i("u_texture_diffuse1", 0);
+			glBindVertexArray(planeVao);
+			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+			glBindVertexArray(0);
+			depthTestShader_9.UnBind();
+		}*/
+
+		{//stencil test	demo : implementation of object outlining with stencil test
+			glStencilMask(0x00);	//disable writing modifying stencil buffer with plane values
+
+			glBindVertexArray(planeVao);
+			tex6.Bind(0);
+			planeShader_12.Bind();
+			model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(10.0f, 10.0f, 10.0f));
+			mvp = projection * view * model;
+			planeShader_12.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
+			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+			planeShader_12.UnBind();
+			glBindVertexArray(0);
+
+			glBindVertexArray(texturedCubeVao);
+
+			glStencilFunc(GL_ALWAYS, 1, 0xFF);
+			glStencilMask(0xFF);
+
+			tex1.Bind(0);
+			tex2.Bind(1);
+			texShader_3.Bind();
+			texShader_3.SetUniform1f("u_mixValue", 0.0f);
+
+			auto drawContainers = [&](glm::vec3 scale) {
+				for (int i = 0; i < 2; ++i) {
+					model = glm::translate(glm::mat4(1.0f), glm::vec3(0.1f * i, -1.5f, -3.0f * i));
+					model = glm::scale(model, scale);
+					mvp = projection * view * model;
+					texShader_3.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
+					texShader_3.SetUniformMat4fv("u_model", glm::value_ptr(model));
+					texShader_3.SetUniform3fv("u_lightPos", glm::value_ptr(lightPos));
+					glDrawArrays(GL_TRIANGLES, 0, 36);
+				}
+			};
+
+			drawContainers(glm::vec3(1.0f, 1.0f, 1.0f));
+			texShader_3.UnBind();
+			tex2.UnBind();
+			tex1.UnBind();
+
+			glStencilFunc(GL_EQUAL, 0, 0XFF);
+			glStencilMask(0x00);		//diable writing to the stencil buffer
+			glDisable(GL_DEPTH_TEST);
+			//glDepthMask(GL_FALSE);
+
+			stencilTestShader_11.Bind();
+			drawContainers(glm::vec3(1.1f, 1.1f, 1.1f));
+			stencilTestShader_11.SetUniform3f("u_lightColor", 1.0f, 0.5f, 0.2f);
+			stencilTestShader_11.UnBind();
+			glStencilMask(0xFF);	//enable stencil test to clear its buffer bit
+			glEnable(GL_DEPTH_TEST);
+			//glDepthMask(GL_TRUE);
+
+			glBindVertexArray(0);
 		}
 		
 		textRenderer.Draw(textShader, debugLog, 10.0f, 10.0f, 0.2f, glm::vec3(0.0f, 0.0f, 0.0f));

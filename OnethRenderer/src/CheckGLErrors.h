@@ -1,12 +1,14 @@
 #pragma once
 
-#pragma once
-
 #define ASSERT(x) if(!(x)) __debugbreak();
 
-#define GLCall(x)   ClearErrors();\
-					x;\
-					ASSERT(CheckErrors(#x, __FILE__, __LINE__))
+#ifdef NDEBUG
+	#define GLCall(x) x
+#else
+	#define GLCall(x)   ClearErrors();\
+						x;\
+						ASSERT(CheckErrors(#x, __FILE__, __LINE__))
+#endif
 
 void ClearErrors();
 
