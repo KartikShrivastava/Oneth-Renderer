@@ -61,7 +61,6 @@ int main() {
 		return -1;
 	}
 
-
 	glm::vec3 pointLightPosition[] = {
 		cubeSetupPos + glm::vec3( 3.0f,  0.0f, 2.0f),
 		cubeSetupPos + glm::vec3( 5.0f,  0.0f, 3.0f),
@@ -86,7 +85,14 @@ int main() {
 		glm::vec3( 4.8f, -2.0f,  2.3f),
 		glm::vec3( 5.4f, -2.0f, -1.6f)
 	};
-	
+	std::vector<glm::vec3> quadPositions = {
+		glm::vec3(-1.5f, -1.0f, -0.48f),
+		glm::vec3( 1.5f, -1.0f,  0.51f),
+		glm::vec3( 0.0f, -1.0f,  0.70f),
+		glm::vec3(-0.3f, -1.0f, -2.30f),
+		glm::vec3( 0.5f, -1.0f, -0.60f) 
+	};
+
 	float verticesBox[] = {
 	-0.5f, -0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    0.0f, 0.0f,
 	 0.5f,  0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    1.0f, 1.0f,
@@ -159,9 +165,9 @@ int main() {
 
 	float verticesPlane[] = {
 		-1.0f,  0.0f,  1.0f,	0.0f, 0.0f,
-		 1.0f,  0.0f,  1.0f,	5.0f, 0.0f,
-		 1.0f,  0.0f, -1.0f,	5.0f, 5.0f,
-		-1.0f,  0.0f, -1.0f,	0.0f, 5.0f
+		 1.0f,  0.0f,  1.0f,	1.0f, 0.0f,
+		 1.0f,  0.0f, -1.0f,	1.0f, 1.0f,
+		-1.0f,  0.0f, -1.0f,	0.0f, 1.0f
 	};
 
 	unsigned int indicesPlane[] = {
@@ -201,6 +207,7 @@ int main() {
 	Shader depthTestShader_10("src/shaders/3_VertexShader.glsl", "src/shaders/10_DepthShaderFS.glsl");
 	Shader stencilTestShader_11("src/shaders/3_VertexShader.glsl", "src/shaders/1_SimpleFragmentShader.glsl");
 	Shader planeShader_12("src/shaders/4_VertexShader.glsl", "src/shaders/11_SimpleTexturedFS.glsl");
+	Shader texShaderNonLit_13("src/shaders/3_VertexShader.glsl", "src/shaders/11_SimpleTexturedFS.glsl");
 
 	TextureStbImage tex1("res/textures/wood.jpg", false);
 	TextureStbImage tex2("res/textures/yayi.png", true);
@@ -208,6 +215,8 @@ int main() {
 	TextureStbImage tex4("res/textures/specularMap.png", false);
 	TextureStbImage tex5("res/textures/emissionMap.png", false);
 	TextureStbImage tex6("res/textures/brick.jpg", false);
+	TextureStbImage tex7Grass("res/textures/grass.png", true);
+	TextureStbImage tex8Window("res/textures/window.png", false);
 
 	//setting up uniform(s) whose values are updated only once
 	{
@@ -338,12 +347,6 @@ int main() {
 		mixedLightShader_8.UnBind();
 	}
 
-	{
-		planeShader_12.Bind();
-		planeShader_12.SetUniform1i("u_texture", 0);
-		planeShader_12.UnBind();
-	}
-
 	ImGui::CreateContext();
 	ImGui_ImplGlfwGL3_Init(window, true);
 	ImGui::StyleColorsClassic();
@@ -376,7 +379,7 @@ int main() {
 	textShader.SetUniformMat4fv("u_projection", glm::value_ptr(textOrthoProjMat));
 	textShader.UnBind();
 
-	float x = 0.0f;
+	std::map<float, glm::vec3> sortedWindows;
 
 	while (!glfwWindowShouldClose(window)) {
 		float currFrame = (float)glfwGetTime();
@@ -529,7 +532,7 @@ int main() {
 			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 			glBindVertexArray(0);
 			depthTestShader_9.UnBind();
-		}*/
+		}
 
 		{//stencil test	demo : implementation of object outlining with stencil test
 			glStencilMask(0x00);	//disable writing modifying stencil buffer with plane values
@@ -537,6 +540,7 @@ int main() {
 			glBindVertexArray(planeVao);
 			tex6.Bind(0);
 			planeShader_12.Bind();
+			planeShader_12.SetUniform1i("u_texture", 0);
 			model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
 			model = glm::scale(model, glm::vec3(10.0f, 10.0f, 10.0f));
 			mvp = projection * view * model;
@@ -552,23 +556,22 @@ int main() {
 
 			tex1.Bind(0);
 			tex2.Bind(1);
-			texShader_3.Bind();
-			texShader_3.SetUniform1f("u_mixValue", 0.0f);
+			texShaderNonLit_13.Bind();
+			texShaderNonLit_13.SetUniform1i("u_texture", 0);
 
 			auto drawContainers = [&](glm::vec3 scale) {
 				for (int i = 0; i < 2; ++i) {
 					model = glm::translate(glm::mat4(1.0f), glm::vec3(0.1f * i, -1.5f, -3.0f * i));
 					model = glm::scale(model, scale);
 					mvp = projection * view * model;
-					texShader_3.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
-					texShader_3.SetUniformMat4fv("u_model", glm::value_ptr(model));
-					texShader_3.SetUniform3fv("u_lightPos", glm::value_ptr(lightPos));
+					texShaderNonLit_13.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
+					texShaderNonLit_13.SetUniformMat4fv("u_model", glm::value_ptr(model));
 					glDrawArrays(GL_TRIANGLES, 0, 36);
 				}
 			};
 
 			drawContainers(glm::vec3(1.0f, 1.0f, 1.0f));
-			texShader_3.UnBind();
+			texShaderNonLit_13.UnBind();
 			tex2.UnBind();
 			tex1.UnBind();
 
@@ -586,6 +589,56 @@ int main() {
 			//glDepthMask(GL_TRUE);
 
 			glBindVertexArray(0);
+		}*/
+
+		{//blend test
+			tex1.Bind(0);
+			texShaderNonLit_13.Bind();
+			texShaderNonLit_13.SetUniform1i("u_texture", 0);
+			glBindVertexArray(texturedCubeVao);
+
+			for (int i = 0; i < 2; ++i) {
+				model = glm::translate(glm::mat4(1.0f), glm::vec3(0.1f * i, -1.5f, -3.0f * i));
+				mvp = projection * view * model;
+				texShaderNonLit_13.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
+				texShaderNonLit_13.SetUniformMat4fv("u_model", glm::value_ptr(model));
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+			}
+			glBindVertexArray(0);
+			texShaderNonLit_13.UnBind();
+			tex1.UnBind();
+
+			tex6.Bind(0);
+			tex8Window.Bind(1);	//tex7Grass
+			planeShader_12.Bind();
+			glBindVertexArray(planeVao);
+
+			planeShader_12.SetUniform1i("u_texture", 0);
+			model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(5.0f, 5.0f, 5.0f));
+			mvp = projection * view * model;
+			planeShader_12.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
+			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+			
+			planeShader_12.SetUniform1i("u_texture", 1);
+			//for (int i = 0; i < sizeof(quadPositions) / sizeof(quadPositions[0]); ++i) {	//maps are bottle neck
+			//	float distance = glm::length(camera.position - quadPositions[i]);
+			//	sortedWindows[distance] = quadPositions[i];
+			//}
+			std::sort(quadPositions.begin(), quadPositions.end(), [](glm::vec3& pos1, glm::vec3& pos2) {
+																	return glm::length(camera.position - pos1) > glm::length(camera.position - pos2); });
+			for (const auto& pos:quadPositions) {
+				model = glm::translate(glm::mat4(1.0f), pos);
+				model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+				mvp = projection * view * model;
+				planeShader_12.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
+				glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+			}
+
+			glBindVertexArray(0);
+			planeShader_12.UnBind();
+			tex6.UnBind();
+			tex8Window.UnBind();	//tex7Grass
 		}
 		
 		textRenderer.Draw(textShader, debugLog, 10.0f, 10.0f, 0.2f, glm::vec3(0.0f, 0.0f, 0.0f));
