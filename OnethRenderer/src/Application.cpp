@@ -195,6 +195,58 @@ int main() {
 	GLCall(glEnableVertexAttribArray(1));
 	GLCall(glBindVertexArray(0));
 
+	//frame buffer setup
+	unsigned int fbo;
+	unsigned int texture;
+	unsigned int rbo;
+	unsigned int quadVao;
+	unsigned int quadVbo;
+	float quadVertices[] = {
+		// positions   // texCoords
+		-1.0f,  1.0f,  0.0f, 1.0f,
+		-1.0f, -1.0f,  0.0f, 0.0f,
+		 1.0f, -1.0f,  1.0f, 0.0f,
+
+		-1.0f,  1.0f,  0.0f, 1.0f,
+		 1.0f, -1.0f,  1.0f, 0.0f,
+		 1.0f,  1.0f,  1.0f, 1.0f
+	};
+	{
+		GLCall(glGenFramebuffers(1, &fbo));
+		GLCall(glBindFramebuffer(GL_FRAMEBUFFER, fbo));
+		GLCall(glGenTextures(1, &texture));
+		GLCall(glActiveTexture(GL_TEXTURE0));
+		GLCall(glBindTexture(GL_TEXTURE_2D, texture));
+		GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, renderer.width, renderer.height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL));
+		GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+		GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+		GLCall(glBindTexture(GL_TEXTURE_2D, 0));
+		GLCall(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0));
+
+		GLCall(glGenRenderbuffers(1, &rbo));
+		GLCall(glBindRenderbuffer(GL_RENDERBUFFER, rbo));
+		GLCall(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, renderer.width, renderer.height));
+		GLCall(glBindRenderbuffer(GL_RENDERBUFFER, 0));
+		GLCall(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo));
+
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+			std::cout << "ERROR::FRAMEBUFFER::Framebuffer is not complete" << std::endl;
+		GLCall(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+
+		GLCall(glGenVertexArrays(1, &quadVao));
+		GLCall(glBindVertexArray(quadVao));
+
+		GLCall(glGenBuffers(1, &quadVbo));
+		GLCall(glBindBuffer(GL_ARRAY_BUFFER, quadVbo));
+		GLCall(glBufferData(GL_ARRAY_BUFFER, 4 * 6 * sizeof(float), quadVertices, GL_STATIC_DRAW));
+		
+		GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(0)));
+		GLCall(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2*sizeof(float))));
+		GLCall(glEnableVertexAttribArray(0));
+		GLCall(glEnableVertexAttribArray(1));
+		GLCall(glBindVertexArray(0));
+	}
+
 	Shader lampShader_1("src/shaders/1_SimpleVertexShader.glsl", "src/shaders/1_SimpleFragmentShader.glsl");
 	Shader noTexShader_2("src/shaders/2_VertexShader.glsl", "src/shaders/2_MaterialFragmentShader.glsl");
 	Shader texShader_3("src/shaders/3_VertexShader.glsl", "src/shaders/3_TexturedFragmentShader.glsl");
@@ -208,6 +260,7 @@ int main() {
 	Shader stencilTestShader_11("src/shaders/3_VertexShader.glsl", "src/shaders/1_SimpleFragmentShader.glsl");
 	Shader planeShader_12("src/shaders/4_VertexShader.glsl", "src/shaders/11_SimpleTexturedFS.glsl");
 	Shader texShaderNonLit_13("src/shaders/3_VertexShader.glsl", "src/shaders/11_SimpleTexturedFS.glsl");
+	Shader frameBufferShader_14("src/shaders/13_FboVertexShader.glsl", "src/shaders/13_FboFragmentShader.glsl");
 
 	TextureStbImage tex1("res/textures/wood.jpg", false);
 	TextureStbImage tex2("res/textures/yayi.png", true);
@@ -217,6 +270,13 @@ int main() {
 	TextureStbImage tex6("res/textures/brick.jpg", false);
 	TextureStbImage tex7Grass("res/textures/grass.png", true);
 	TextureStbImage tex8Window("res/textures/window.png", false);
+
+	Text textRenderer("res/fonts/pixel.ttf", 48);
+	Shader textShader("src/shaders/12_textVertexShader.glsl", "src/shaders/12_textFragmentShader.glsl");
+	glm::mat4 textOrthoProjMat = glm::ortho(0.0f, 1.0f * renderer.width, 0.0f, 1.0f * renderer.height);
+	textShader.Bind();
+	textShader.SetUniformMat4fv("u_projection", glm::value_ptr(textOrthoProjMat));
+	textShader.UnBind();
 
 	//setting up uniform(s) whose values are updated only once
 	{
@@ -292,7 +352,6 @@ int main() {
 		spotLightShader_7.SetUniform1f("u_light.quadratic", 0.0028f);
 		spotLightShader_7.UnBind();
 	}
-
 	//mixed light 
 	{
 		mixedLightShader_8.Bind();
@@ -371,13 +430,6 @@ int main() {
 	glm::mat4 view;
 	glm::mat4 projection;
 	glm::mat4 mvp;
-
-	Text textRenderer("res/fonts/pixel.ttf", 48);
-	Shader textShader("src/shaders/12_textVertexShader.glsl", "src/shaders/12_textFragmentShader.glsl");
-	glm::mat4 textOrthoProjMat = glm::ortho(0.0f, 1.0f * renderer.width, 0.0f, 1.0f * renderer.height);
-	textShader.Bind();
-	textShader.SetUniformMat4fv("u_projection", glm::value_ptr(textOrthoProjMat));
-	textShader.UnBind();
 
 	std::map<float, glm::vec3> sortedWindows;
 
@@ -589,7 +641,7 @@ int main() {
 			//glDepthMask(GL_TRUE);
 
 			glBindVertexArray(0);
-		}*/
+		}
 
 		{//blend test
 			tex1.Bind(0);
@@ -609,7 +661,8 @@ int main() {
 			tex1.UnBind();
 
 			tex6.Bind(0);
-			tex8Window.Bind(1);	//tex7Grass
+			tex8Window.Bind(1);		//tex7Grass
+			glDisable(GL_CULL_FACE);
 			planeShader_12.Bind();
 			glBindVertexArray(planeVao);
 
@@ -619,12 +672,8 @@ int main() {
 			mvp = projection * view * model;
 			planeShader_12.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
 			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-			
+
 			planeShader_12.SetUniform1i("u_texture", 1);
-			//for (int i = 0; i < sizeof(quadPositions) / sizeof(quadPositions[0]); ++i) {	//maps are bottle neck
-			//	float distance = glm::length(camera.position - quadPositions[i]);
-			//	sortedWindows[distance] = quadPositions[i];
-			//}
 			std::sort(quadPositions.begin(), quadPositions.end(), [](glm::vec3& pos1, glm::vec3& pos2) {
 																	return glm::length(camera.position - pos1) > glm::length(camera.position - pos2); });
 			for (const auto& pos:quadPositions) {
@@ -637,10 +686,65 @@ int main() {
 
 			glBindVertexArray(0);
 			planeShader_12.UnBind();
-			tex6.UnBind();
+			glEnable(GL_CULL_FACE);
 			tex8Window.UnBind();	//tex7Grass
+			tex6.UnBind();
 		}
-		
+
+		{//framebuffer usage
+			glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+			glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+			glEnable(GL_DEPTH_TEST);
+
+			tex1.Bind(0);
+			texShaderNonLit_13.Bind();
+			texShaderNonLit_13.SetUniform1i("u_texture", 0);
+			glBindVertexArray(texturedCubeVao);
+			for (int i = 0; i < 2; ++i) {
+				model = glm::translate(glm::mat4(1.0f), glm::vec3(0.1f * i, -1.5f, -3.0f * i));
+				mvp = projection * view * model;
+				texShaderNonLit_13.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
+				texShaderNonLit_13.SetUniformMat4fv("u_model", glm::value_ptr(model));
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+			}
+			glBindVertexArray(0);
+			texShaderNonLit_13.UnBind();
+			tex1.UnBind();
+
+			tex6.Bind(0);
+			planeShader_12.Bind();
+			glBindVertexArray(planeVao);
+			planeShader_12.SetUniform1i("u_texture", 0);
+			model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(5.0f, 5.0f, 5.0f));
+			mvp = projection * view * model;
+			planeShader_12.SetUniformMat4fv("u_mvp", glm::value_ptr(mvp));
+			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+			glBindVertexArray(0);
+			planeShader_12.UnBind();
+			tex6.UnBind();
+
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT);
+
+			glActiveTexture(GL_TEXTURE0);
+			frameBufferShader_14.Bind();
+			frameBufferShader_14.SetUniform1i("u_texture", 0);
+			glBindVertexArray(quadVao);
+			glDisable(GL_DEPTH_TEST);
+			glBindTexture(GL_TEXTURE_2D, texture);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+			glBindVertexArray(0);
+			frameBufferShader_14.UnBind();
+		}*/
+
+		{
+			//lkngd;
+
+		}
+
 		textRenderer.Draw(textShader, debugLog, 10.0f, 10.0f, 0.2f, glm::vec3(0.0f, 0.0f, 0.0f));
 		
 		{
@@ -652,7 +756,7 @@ int main() {
 		}
 		ImGui::Render();
 		ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
-
+		
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}

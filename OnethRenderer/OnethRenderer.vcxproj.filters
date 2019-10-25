@@ -132,5 +132,7 @@
     <None Include="src\shaders\4_VertexShader.glsl" />
     <None Include="src\shaders\10_DepthShaderFS.glsl" />
     <None Include="src\shaders\11_SimpleTexturedFS.glsl" />
+    <None Include="src\shaders\13_FboVertexShader.glsl" />
+    <None Include="src\shaders\13_FboFragmentShader.glsl" />
   </ItemGroup>
 </Project>
